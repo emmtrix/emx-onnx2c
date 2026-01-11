@@ -16,6 +16,7 @@ from .codegen.c_emitter import (
     ConvOp,
     LoweredModel,
     MatMulOp,
+    TransposeOp,
     UnaryOp,
 )
 from .dtypes import dtype_info
@@ -61,7 +62,9 @@ class Compiler:
         input_dtypes = tuple(
             _value_dtype(graph, value.name) for value in graph.inputs
         )
-        ops: list[BinaryOp | UnaryOp | MatMulOp | AttentionOp | ConvOp] = []
+        ops: list[
+            BinaryOp | UnaryOp | MatMulOp | AttentionOp | ConvOp | TransposeOp
+        ] = []
         for node in graph.nodes:
             if node.op_type in {"MatMul", "Gemm"}:
                 if node.op_type == "Gemm":
@@ -73,6 +76,9 @@ class Compiler:
                 continue
             if node.op_type == "Conv":
                 ops.append(self._lower_conv_op(graph, node))
+                continue
+            if node.op_type == "Transpose":
+                ops.append(self._lower_transpose_op(graph, node))
                 continue
             op_dtype = _node_dtype(graph, node, *node.inputs, *node.outputs)
             op_spec = _binary_op_symbol(
@@ -162,6 +168,15 @@ class Compiler:
                 values[node.outputs[0]] = _apply_conv(
                     spec, data, weights, bias
                 )
+                continue
+            if node.op_type == "Transpose":
+                if len(node.inputs) != 1 or len(node.outputs) != 1:
+                    raise UnsupportedOpError(
+                        "Transpose must have 1 input and 1 output"
+                    )
+                value = values[node.inputs[0]]
+                perm = _resolve_transpose_perm(node, value.shape)
+                values[node.outputs[0]] = np.transpose(value, perm)
                 continue
             op_dtype = _node_dtype(graph, node, *node.inputs, *node.outputs)
             op_spec = _binary_op_symbol(node.op_type, node.attrs, dtype=op_dtype)
@@ -257,6 +272,28 @@ class Compiler:
             dtype=op_dtype,
         )
 
+    def _lower_transpose_op(self, graph: Graph, node: Node) -> TransposeOp:
+        if len(node.inputs) != 1 or len(node.outputs) != 1:
+            raise UnsupportedOpError("Transpose must have 1 input and 1 output")
+        op_dtype = _node_dtype(graph, node, *node.inputs, *node.outputs)
+        input_shape = _value_shape(graph, node.inputs[0], node)
+        perm = _resolve_transpose_perm(node, input_shape)
+        output_shape = _value_shape(graph, node.outputs[0], node)
+        expected_output_shape = tuple(input_shape[index] for index in perm)
+        if output_shape != expected_output_shape:
+            raise ShapeInferenceError(
+                "Transpose output shape must be "
+                f"{expected_output_shape}, got {output_shape}"
+            )
+        return TransposeOp(
+            input0=node.inputs[0],
+            output=node.outputs[0],
+            perm=perm,
+            input_shape=input_shape,
+            output_shape=output_shape,
+            dtype=op_dtype,
+        )
+
 
 @dataclass(frozen=True)
 class _BinaryOpSpec:
@@ -331,6 +368,28 @@ def _value_shape(graph: Graph, name: str, node: Node | None = None) -> tuple[int
             f"Missing shape for value '{name}' in op {op_type}. "
             "Hint: run ONNX shape inference or export with static shapes."
         ) from exc
+
+
+def _resolve_transpose_perm(
+    node: Node, input_shape: tuple[int, ...]
+) -> tuple[int, ...]:
+    rank = len(input_shape)
+    if rank == 0:
+        raise ShapeInferenceError("Transpose does not support scalar inputs")
+    perm_attr = node.attrs.get("perm")
+    if perm_attr is None:
+        perm = tuple(range(rank - 1, -1, -1))
+    else:
+        perm = tuple(int(axis) for axis in perm_attr)
+    if len(perm) != rank:
+        raise UnsupportedOpError(
+            f"Transpose perm must have rank {rank}, got {len(perm)}"
+        )
+    if sorted(perm) != list(range(rank)):
+        raise UnsupportedOpError(
+            f"Transpose perm must be a permutation of 0..{rank - 1}, got {perm}"
+        )
+    return perm
 
 
 def _binary_op_symbol(

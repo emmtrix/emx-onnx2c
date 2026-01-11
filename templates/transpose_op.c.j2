@@ -1,0 +1,41 @@
+static void {{ op_name }}(const {{ c_type }} {{ input0 }}{{ input_suffix }}, {{ c_type }} {{ output }}{{ output_suffix }}) {
+    const int64_t input_shape[{{ rank }}] = { {{ input_shape | join(", ") }} };
+    const int64_t perm[{{ rank }}] = { {{ perm | join(", ") }} };
+    int64_t output_shape[{{ rank }}];
+    size_t input_strides[{{ rank }}];
+    size_t output_strides[{{ rank }}];
+    for (int64_t axis = 0; axis < {{ rank }}; ++axis) {
+        output_shape[axis] = input_shape[perm[axis]];
+    }
+    if ({{ rank }} > 0) {
+        input_strides[{{ rank }} - 1] = 1;
+        output_strides[{{ rank }} - 1] = 1;
+    }
+    for (int64_t axis = {{ rank }} - 1; axis > 0; --axis) {
+        input_strides[axis - 1] =
+            input_strides[axis] * (size_t)input_shape[axis];
+        output_strides[axis - 1] =
+            output_strides[axis] * (size_t)output_shape[axis];
+    }
+    size_t total = 1;
+    for (int64_t axis = 0; axis < {{ rank }}; ++axis) {
+        total *= (size_t)output_shape[axis];
+    }
+    const uint8_t *input_bytes = (const uint8_t *){{ input0 }};
+    uint8_t *output_bytes = (uint8_t *){{ output }};
+    for (size_t out_index = 0; out_index < total; ++out_index) {
+        size_t remaining = out_index;
+        size_t input_index = 0;
+        for (int64_t axis = 0; axis < {{ rank }}; ++axis) {
+            size_t coord = remaining / output_strides[axis];
+            remaining %= output_strides[axis];
+            input_index +=
+                coord * input_strides[(size_t)perm[axis]];
+        }
+        memcpy(
+            output_bytes + out_index * sizeof({{ c_type }}),
+            input_bytes + input_index * sizeof({{ c_type }}),
+            sizeof({{ c_type }})
+        );
+    }
+}

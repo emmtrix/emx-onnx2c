@@ -431,6 +431,22 @@ OPERATOR_CASES = [
         "dtype": TensorProto.FLOAT,
         "attrs": {},
     },
+    {
+        "name": "TransposeNCHWToNHWC",
+        "op_type": "Transpose",
+        "input_shapes": [[1, 3, 4, 5]],
+        "output_shape": [1, 4, 5, 3],
+        "dtype": TensorProto.FLOAT,
+        "attrs": {"perm": [0, 2, 3, 1]},
+    },
+    {
+        "name": "TransposeNHWCToNCHW",
+        "op_type": "Transpose",
+        "input_shapes": [[1, 4, 5, 3]],
+        "output_shape": [1, 3, 4, 5],
+        "dtype": TensorProto.FLOAT,
+        "attrs": {"perm": [0, 3, 1, 2]},
+    },
 ]
 
 
