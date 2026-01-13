@@ -37,6 +37,7 @@ from ..lowering.shape import lower_shape
 from ..lowering.softmax import lower_softmax
 from ..lowering.transpose import lower_transpose
 from ..lowering.unsqueeze import lower_unsqueeze
+from ..lowering.where import lower_where
 from ..lowering.registry import resolve_dispatch
 from ..lowering.common import node_dtype, optional_name, value_dtype
 from ..ops import (
@@ -145,6 +146,33 @@ def _eval_cast(evaluator: Evaluator, node: Node) -> None:
     evaluator.values[node.outputs[0]] = input_value.astype(
         target_info.np_dtype, copy=False
     )
+
+
+@register_evaluator("CastLike")
+def _eval_castlike(evaluator: Evaluator, node: Node) -> None:
+    if len(node.inputs) != 2 or len(node.outputs) != 1:
+        raise UnsupportedOpError("CastLike must have 2 inputs and 1 output")
+    like_dtype = value_dtype(evaluator.graph, node.inputs[1], node)
+    output_dtype = value_dtype(evaluator.graph, node.outputs[0], node)
+    if output_dtype != like_dtype:
+        raise UnsupportedOpError(
+            "CastLike output dtype must match like input dtype, "
+            f"got {output_dtype} and {like_dtype}"
+        )
+    target_info = dtype_info(output_dtype)
+    input_value = evaluator.values[node.inputs[0]]
+    evaluator.values[node.outputs[0]] = input_value.astype(
+        target_info.np_dtype, copy=False
+    )
+
+
+@register_evaluator("Where")
+def _eval_where(evaluator: Evaluator, node: Node) -> None:
+    lower_where(evaluator.graph, node)
+    condition = evaluator.values[node.inputs[0]]
+    x_value = evaluator.values[node.inputs[1]]
+    y_value = evaluator.values[node.inputs[2]]
+    evaluator.values[node.outputs[0]] = np.where(condition, x_value, y_value)
 
 
 @register_evaluator("Attention")

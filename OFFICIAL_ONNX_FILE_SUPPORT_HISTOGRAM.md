@@ -7,9 +7,8 @@
 | ReduceSum axes input must be constant | 39 | ████████ |
 | Missing elem_type for tensor '*' | 34 | ███████ |
 | Unsupported elem_type 8 (STRING) for tensor '*'. | 32 | ███████ |
-| Unsupported op CastLike | 31 | ██████ |
+| Unsupported op GatherElements | 21 | ████ |
 | Unsupported op Identity | 20 | ████ |
-| Unsupported op Where | 19 | ████ |
 | Unsupported op LayerNormalization | 19 | ████ |
 | Unsupported op RMSNormalization | 19 | ████ |
 | Unsupported op GridSample | 18 | ████ |
@@ -26,7 +25,6 @@
 | Unsupported elem_type 25 (UINT2) for tensor '*'. | 14 | ███ |
 | Unsupported elem_type 21 (UINT4) for tensor '*'. | 14 | ███ |
 | Unsupported op ConvTranspose | 14 | ███ |
-| Unsupported op GatherElements | 14 | ███ |
 | Unsupported elem_type 18 (FLOAT8E4M3FNUZ) for tensor '*'. | 12 | ██ |
 | Unsupported elem_type 20 (FLOAT8E5M2FNUZ) for tensor '*'. | 12 | ██ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 11 | ██ |
@@ -66,6 +64,7 @@
 | Unsupported op QuantizeLinear | 6 | █ |
 | ReduceMean axes input must be constant | 6 | █ |
 | Unsupported op ScatterElements | 6 | █ |
+| Unsupported op Sigmoid | 6 | █ |
 | Unsupported op Unique | 6 | █ |
 | AveragePool expects 2D kernel_shape | 5 | █ |
 | Unsupported op Elu | 5 | █ |
@@ -75,7 +74,6 @@
 | ReduceSum output shape must be (1, 1, 1), got () | 5 | █ |
 | Unsupported op ScatterND | 5 | █ |
 | Unsupported op Selu | 5 | █ |
-| Unsupported op Sigmoid | 5 | █ |
 | Unsupported op AffineGrid | 4 | █ |
 | Unsupported op DeformConv | 4 | █ |
 | Unsupported op BitwiseAnd | 4 | █ |
@@ -99,6 +97,7 @@
 | Unsupported op BitwiseNot | 3 | █ |
 | Unsupported elem_type 24 (FLOAT8E8M0) for tensor '*'. | 3 | █ |
 | Unsupported op DynamicQuantizeLinear | 3 | █ |
+| Unsupported op Erf | 3 | █ |
 | Unsupported op EyeLike | 3 | █ |
 | Unsupported op GatherND | 3 | █ |
 | Unsupported op InstanceNormalization | 3 | █ |
@@ -154,7 +153,6 @@
 | Unsupported op Celu | 1 | █ |
 | Graph must contain at least one node | 1 | █ |
 | Dropout mask output is not supported | 1 | █ |
-| Unsupported op Erf | 1 | █ |
 | Gemm bias input must be rank 1 or 2, got () | 1 | █ |
 | Gemm bias input must be broadcastable to output shape, got (1,) vs (3, 3) | 1 | █ |
 | Unsupported op HardSwish | 1 | █ |
