@@ -349,6 +349,7 @@ class MaxPoolOp:
     pads: tuple[int, ...]
     dilations: tuple[int, ...]
     ceil_mode: bool
+    storage_order: int
     dtype: str
     indices_dtype: str | None
 
@@ -1861,6 +1862,7 @@ class CEmitter:
                 pads=op.pads,
                 dilations=op.dilations,
                 ceil_mode=op.ceil_mode,
+                storage_order=op.storage_order,
                 dtype=op.dtype,
                 indices_dtype=op.indices_dtype,
             )
@@ -2723,6 +2725,7 @@ class CEmitter:
                 pads=op.pads,
                 dilations=op.dilations,
                 ceil_mode=int(op.ceil_mode),
+                storage_order=op.storage_order,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, ConcatOp):

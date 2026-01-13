@@ -1097,8 +1097,16 @@ def _apply_maxpool(
                         has_value = True
                         if return_indices:
                             linear_index = n * spec.channels + c
-                            for idx, size in zip(in_index, spec.in_spatial):
-                                linear_index = linear_index * size + idx
+                            if spec.storage_order == 0:
+                                for idx, size in zip(in_index, spec.in_spatial):
+                                    linear_index = linear_index * size + idx
+                            else:
+                                spatial_index = 0
+                                spatial_stride = 1
+                                for idx, size in zip(in_index, spec.in_spatial):
+                                    spatial_index += idx * spatial_stride
+                                    spatial_stride *= size
+                                linear_index = linear_index * spatial_stride + spatial_index
                             max_index = linear_index
                 output[(n, c, *out_index)] = max_value
                 if return_indices and indices is not None:

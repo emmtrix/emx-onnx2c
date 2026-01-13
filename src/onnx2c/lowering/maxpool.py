@@ -24,6 +24,7 @@ class MaxPoolSpec:
     pads: tuple[int, ...]
     dilations: tuple[int, ...]
     ceil_mode: bool
+    storage_order: int
 
 
 def resolve_maxpool_spec(graph: Graph, node: Node) -> MaxPoolSpec:
@@ -41,8 +42,8 @@ def resolve_maxpool_spec(graph: Graph, node: Node) -> MaxPoolSpec:
     if set(node.attrs) - supported_attrs:
         raise UnsupportedOpError("MaxPool has unsupported attributes")
     storage_order = int(node.attrs.get("storage_order", 0))
-    if storage_order != 0:
-        raise UnsupportedOpError("MaxPool supports storage_order=0 only")
+    if storage_order not in (0, 1):
+        raise UnsupportedOpError("MaxPool supports storage_order=0 or 1 only")
     kernel_shape = node.attrs.get("kernel_shape")
     if kernel_shape is None:
         raise UnsupportedOpError("MaxPool requires kernel_shape")
@@ -152,6 +153,7 @@ def resolve_maxpool_spec(graph: Graph, node: Node) -> MaxPoolSpec:
         pads=pads,
         dilations=dilations,
         ceil_mode=bool(ceil_mode),
+        storage_order=storage_order,
     )
 
 
@@ -183,6 +185,7 @@ def lower_maxpool(graph: Graph, node: Node) -> MaxPoolOp:
         pads=spec.pads,
         dilations=spec.dilations,
         ceil_mode=spec.ceil_mode,
+        storage_order=spec.storage_order,
         dtype=op_dtype,
         indices_dtype=indices_dtype,
     )
