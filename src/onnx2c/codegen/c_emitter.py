@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 
@@ -34,6 +35,61 @@ def _format_c_indentation(source: str, *, indent: str = "    ") -> str:
         indent_level = max(indent_level, 0)
     return "\n".join(formatted_lines)
 
+
+_SCALAR_TYPE_BY_DTYPE: dict[str, ScalarType] = {
+    "float": ScalarType.F32,
+    "double": ScalarType.F64,
+    "int8": ScalarType.I8,
+    "int16": ScalarType.I16,
+    "int32": ScalarType.I32,
+    "int64": ScalarType.I64,
+    "uint8": ScalarType.U8,
+    "uint16": ScalarType.U16,
+    "uint32": ScalarType.U32,
+    "uint64": ScalarType.U64,
+    "bool": ScalarType.BOOL,
+}
+
+_C_IDENTIFIER_RE = re.compile(r"[^a-zA-Z0-9_]")
+_C_KEYWORDS = {
+    "_Bool",
+    "_Complex",
+    "_Imaginary",
+    "auto",
+    "break",
+    "case",
+    "char",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extern",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "inline",
+    "int",
+    "long",
+    "register",
+    "restrict",
+    "return",
+    "short",
+    "signed",
+    "sizeof",
+    "static",
+    "struct",
+    "switch",
+    "typedef",
+    "union",
+    "unsigned",
+    "void",
+    "volatile",
+    "while",
+}
 
 _SCALAR_FUNCTION_BY_ONNX_OP: dict[str, ScalarFunction] = {
     "Abs": ScalarFunction.ABS,
@@ -627,6 +683,749 @@ class CEmitter:
         )
         self._restrict_arrays = restrict_arrays
 
+    @staticmethod
+    def _sanitize_identifier(name: str) -> str:
+        sanitized = _C_IDENTIFIER_RE.sub("_", name)
+        if not sanitized:
+            sanitized = "v"
+        if sanitized[0].isdigit():
+            sanitized = f"v_{sanitized}"
+        return sanitized
+
+    @staticmethod
+    def _ensure_unique_identifier(base: str, used: set[str]) -> str:
+        if base not in used and base not in _C_KEYWORDS:
+            return base
+        index = 1
+        while True:
+            candidate = f"{base}_{index}"
+            if candidate not in used and candidate not in _C_KEYWORDS:
+                return candidate
+            index += 1
+
+    @staticmethod
+    def _op_names(
+        op: BinaryOp
+        | WhereOp
+        | UnaryOp
+        | CastOp
+        | MatMulOp
+        | GemmOp
+        | AttentionOp
+        | ConvOp
+        | AveragePoolOp
+        | BatchNormOp
+        | LrnOp
+        | LstmOp
+        | SoftmaxOp
+        | LogSoftmaxOp
+        | NegativeLogLikelihoodLossOp
+        | SoftmaxCrossEntropyLossOp
+        | MaxPoolOp
+        | ConcatOp
+        | GatherElementsOp
+        | GatherOp
+        | TransposeOp
+        | ReshapeOp
+        | SliceOp
+        | ResizeOp
+        | ReduceOp
+        | ConstantOfShapeOp
+        | ShapeOp
+        | SizeOp,
+    ) -> tuple[str, ...]:
+        if isinstance(op, BinaryOp):
+            return (op.input0, op.input1, op.output)
+        if isinstance(op, WhereOp):
+            return (op.condition, op.input_x, op.input_y, op.output)
+        if isinstance(op, UnaryOp):
+            return (op.input0, op.output)
+        if isinstance(op, CastOp):
+            return (op.input0, op.output)
+        if isinstance(op, MatMulOp):
+            return (op.input0, op.input1, op.output)
+        if isinstance(op, GemmOp):
+            names = [op.input_a, op.input_b]
+            if op.input_c is not None:
+                names.append(op.input_c)
+            names.append(op.output)
+            return tuple(names)
+        if isinstance(op, AttentionOp):
+            names = [op.input_q, op.input_k, op.input_v]
+            if op.input_attn_mask is not None:
+                names.append(op.input_attn_mask)
+            if op.input_past_key is not None:
+                names.append(op.input_past_key)
+            if op.input_past_value is not None:
+                names.append(op.input_past_value)
+            if op.input_nonpad_kv_seqlen is not None:
+                names.append(op.input_nonpad_kv_seqlen)
+            names.append(op.output)
+            if op.output_present_key is not None:
+                names.append(op.output_present_key)
+            if op.output_present_value is not None:
+                names.append(op.output_present_value)
+            if op.output_qk_matmul is not None:
+                names.append(op.output_qk_matmul)
+            return tuple(names)
+        if isinstance(op, ConvOp):
+            names = [op.input0, op.weights]
+            if op.bias is not None:
+                names.append(op.bias)
+            names.append(op.output)
+            return tuple(names)
+        if isinstance(op, AveragePoolOp):
+            return (op.input0, op.output)
+        if isinstance(op, BatchNormOp):
+            return (op.input0, op.scale, op.bias, op.mean, op.variance, op.output)
+        if isinstance(op, LstmOp):
+            names = [op.input_x, op.input_w, op.input_r]
+            if op.input_b is not None:
+                names.append(op.input_b)
+            if op.input_sequence_lens is not None:
+                names.append(op.input_sequence_lens)
+            if op.input_initial_h is not None:
+                names.append(op.input_initial_h)
+            if op.input_initial_c is not None:
+                names.append(op.input_initial_c)
+            if op.input_p is not None:
+                names.append(op.input_p)
+            if op.output_y is not None:
+                names.append(op.output_y)
+            if op.output_y_h is not None:
+                names.append(op.output_y_h)
+            if op.output_y_c is not None:
+                names.append(op.output_y_c)
+            return tuple(names)
+        if isinstance(op, (SoftmaxOp, LogSoftmaxOp)):
+            return (op.input0, op.output)
+        if isinstance(op, NegativeLogLikelihoodLossOp):
+            names = [op.input0, op.target]
+            if op.weight is not None:
+                names.append(op.weight)
+            names.append(op.output)
+            return tuple(names)
+        if isinstance(op, SoftmaxCrossEntropyLossOp):
+            names = [op.input0, op.target]
+            if op.weight is not None:
+                names.append(op.weight)
+            names.append(op.output)
+            if op.log_prob is not None:
+                names.append(op.log_prob)
+            return tuple(names)
+        if isinstance(op, MaxPoolOp):
+            names = [op.input0, op.output]
+            if op.indices is not None:
+                names.append(op.indices)
+            return tuple(names)
+        if isinstance(op, GatherElementsOp):
+            return (op.data, op.indices, op.output)
+        if isinstance(op, GatherOp):
+            return (op.data, op.indices, op.output)
+        if isinstance(op, ConcatOp):
+            return (*op.inputs, op.output)
+        if isinstance(op, ConstantOfShapeOp):
+            return (op.input0, op.output)
+        if isinstance(op, ShapeOp):
+            return (op.input0, op.output)
+        if isinstance(op, SizeOp):
+            return (op.input0, op.output)
+        if isinstance(op, ReshapeOp):
+            return (op.input0, op.output)
+        if isinstance(op, SliceOp):
+            return (op.input0, op.output)
+        if isinstance(op, ResizeOp):
+            names = [op.input0]
+            if op.roi_input is not None:
+                names.append(op.roi_input)
+            if op.scales_input is not None:
+                names.append(op.scales_input)
+            if op.sizes_input is not None:
+                names.append(op.sizes_input)
+            names.append(op.output)
+            return tuple(names)
+        if isinstance(op, ReduceOp):
+            names = [op.input0]
+            if op.axes_input is not None:
+                names.append(op.axes_input)
+            names.append(op.output)
+            return tuple(names)
+        return (op.input0, op.output)
+
+    def _build_name_map(self, model: LoweredModel) -> dict[str, str]:
+        used: set[str] = set()
+        name_map: dict[str, str] = {}
+        names = [model.name]
+        names.extend(model.input_names)
+        names.extend(model.output_names)
+        names.extend(const.name for const in model.constants)
+        for op in model.ops:
+            names.extend(self._op_names(op))
+        for name in names:
+            if name in name_map:
+                continue
+            sanitized = self._sanitize_identifier(name)
+            unique = self._ensure_unique_identifier(sanitized, used)
+            name_map[name] = unique
+            used.add(unique)
+        return name_map
+
+    @staticmethod
+    def _map_optional_name(
+        name_map: dict[str, str], name: str | None
+    ) -> str | None:
+        if name is None:
+            return None
+        return name_map.get(name, name)
+
+    def _map_op_names(
+        self,
+        op: BinaryOp
+        | WhereOp
+        | UnaryOp
+        | CastOp
+        | MatMulOp
+        | GemmOp
+        | AttentionOp
+        | ConvOp
+        | AveragePoolOp
+        | BatchNormOp
+        | LrnOp
+        | LstmOp
+        | SoftmaxOp
+        | LogSoftmaxOp
+        | NegativeLogLikelihoodLossOp
+        | SoftmaxCrossEntropyLossOp
+        | MaxPoolOp
+        | ConcatOp
+        | GatherElementsOp
+        | GatherOp
+        | TransposeOp
+        | ReshapeOp
+        | SliceOp
+        | ResizeOp
+        | ReduceOp
+        | ConstantOfShapeOp
+        | ShapeOp
+        | SizeOp,
+        name_map: dict[str, str],
+    ) -> (
+        BinaryOp
+        | WhereOp
+        | UnaryOp
+        | CastOp
+        | MatMulOp
+        | GemmOp
+        | AttentionOp
+        | ConvOp
+        | AveragePoolOp
+        | BatchNormOp
+        | LrnOp
+        | LstmOp
+        | SoftmaxOp
+        | LogSoftmaxOp
+        | NegativeLogLikelihoodLossOp
+        | SoftmaxCrossEntropyLossOp
+        | MaxPoolOp
+        | ConcatOp
+        | GatherElementsOp
+        | GatherOp
+        | TransposeOp
+        | ReshapeOp
+        | SliceOp
+        | ResizeOp
+        | ReduceOp
+        | ConstantOfShapeOp
+        | ShapeOp
+        | SizeOp
+    ):
+        if isinstance(op, BinaryOp):
+            return BinaryOp(
+                input0=name_map.get(op.input0, op.input0),
+                input1=name_map.get(op.input1, op.input1),
+                output=name_map.get(op.output, op.output),
+                operator=op.operator,
+                operator_kind=op.operator_kind,
+                shape=op.shape,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        if isinstance(op, WhereOp):
+            return WhereOp(
+                condition=name_map.get(op.condition, op.condition),
+                input_x=name_map.get(op.input_x, op.input_x),
+                input_y=name_map.get(op.input_y, op.input_y),
+                output=name_map.get(op.output, op.output),
+                condition_shape=op.condition_shape,
+                x_shape=op.x_shape,
+                y_shape=op.y_shape,
+                output_shape=op.output_shape,
+                dtype=op.dtype,
+            )
+        if isinstance(op, UnaryOp):
+            return UnaryOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                operator=op.operator,
+                shape=op.shape,
+                dtype=op.dtype,
+            )
+        if isinstance(op, CastOp):
+            return CastOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                shape=op.shape,
+                input_dtype=op.input_dtype,
+                dtype=op.dtype,
+            )
+        if isinstance(op, MatMulOp):
+            return MatMulOp(
+                input0=name_map.get(op.input0, op.input0),
+                input1=name_map.get(op.input1, op.input1),
+                output=name_map.get(op.output, op.output),
+                input0_shape=op.input0_shape,
+                input1_shape=op.input1_shape,
+                output_shape=op.output_shape,
+                batch_shape=op.batch_shape,
+                input0_batch_shape=op.input0_batch_shape,
+                input1_batch_shape=op.input1_batch_shape,
+                m=op.m,
+                n=op.n,
+                k=op.k,
+                left_vector=op.left_vector,
+                right_vector=op.right_vector,
+                dtype=op.dtype,
+            )
+        if isinstance(op, GemmOp):
+            return GemmOp(
+                input_a=name_map.get(op.input_a, op.input_a),
+                input_b=name_map.get(op.input_b, op.input_b),
+                input_c=self._map_optional_name(name_map, op.input_c),
+                output=name_map.get(op.output, op.output),
+                m=op.m,
+                n=op.n,
+                k=op.k,
+                trans_a=op.trans_a,
+                trans_b=op.trans_b,
+                alpha=op.alpha,
+                beta=op.beta,
+                c_shape=op.c_shape,
+                dtype=op.dtype,
+            )
+        if isinstance(op, AttentionOp):
+            return AttentionOp(
+                input_q=name_map.get(op.input_q, op.input_q),
+                input_k=name_map.get(op.input_k, op.input_k),
+                input_v=name_map.get(op.input_v, op.input_v),
+                input_attn_mask=self._map_optional_name(
+                    name_map, op.input_attn_mask
+                ),
+                input_past_key=self._map_optional_name(
+                    name_map, op.input_past_key
+                ),
+                input_past_value=self._map_optional_name(
+                    name_map, op.input_past_value
+                ),
+                input_nonpad_kv_seqlen=self._map_optional_name(
+                    name_map, op.input_nonpad_kv_seqlen
+                ),
+                output_present_key=self._map_optional_name(
+                    name_map, op.output_present_key
+                ),
+                output_present_value=self._map_optional_name(
+                    name_map, op.output_present_value
+                ),
+                output_qk_matmul=self._map_optional_name(
+                    name_map, op.output_qk_matmul
+                ),
+                output=name_map.get(op.output, op.output),
+                batch=op.batch,
+                q_heads=op.q_heads,
+                kv_heads=op.kv_heads,
+                q_seq=op.q_seq,
+                kv_seq=op.kv_seq,
+                total_seq=op.total_seq,
+                past_seq=op.past_seq,
+                qk_head_size=op.qk_head_size,
+                v_head_size=op.v_head_size,
+                q_hidden_size=op.q_hidden_size,
+                k_hidden_size=op.k_hidden_size,
+                v_hidden_size=op.v_hidden_size,
+                scale=op.scale,
+                is_causal=op.is_causal,
+                softcap=op.softcap,
+                qk_matmul_output_mode=op.qk_matmul_output_mode,
+                q_rank=op.q_rank,
+                k_rank=op.k_rank,
+                v_rank=op.v_rank,
+                output_rank=op.output_rank,
+                mask_shape=op.mask_shape,
+                mask_is_bool=op.mask_is_bool,
+                mask_rank=op.mask_rank,
+                mask_broadcast_batch=op.mask_broadcast_batch,
+                mask_broadcast_heads=op.mask_broadcast_heads,
+                mask_broadcast_q_seq=op.mask_broadcast_q_seq,
+                mask_q_seq=op.mask_q_seq,
+                mask_kv_seq=op.mask_kv_seq,
+                head_group_size=op.head_group_size,
+                dtype=op.dtype,
+            )
+        if isinstance(op, ConvOp):
+            return ConvOp(
+                input0=name_map.get(op.input0, op.input0),
+                weights=name_map.get(op.weights, op.weights),
+                bias=self._map_optional_name(name_map, op.bias),
+                output=name_map.get(op.output, op.output),
+                batch=op.batch,
+                in_channels=op.in_channels,
+                out_channels=op.out_channels,
+                spatial_rank=op.spatial_rank,
+                in_spatial=op.in_spatial,
+                out_spatial=op.out_spatial,
+                kernel_shape=op.kernel_shape,
+                strides=op.strides,
+                pads=op.pads,
+                dilations=op.dilations,
+                group=op.group,
+                dtype=op.dtype,
+            )
+        if isinstance(op, AveragePoolOp):
+            return AveragePoolOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                batch=op.batch,
+                channels=op.channels,
+                in_h=op.in_h,
+                in_w=op.in_w,
+                out_h=op.out_h,
+                out_w=op.out_w,
+                kernel_h=op.kernel_h,
+                kernel_w=op.kernel_w,
+                stride_h=op.stride_h,
+                stride_w=op.stride_w,
+                pad_top=op.pad_top,
+                pad_left=op.pad_left,
+                pad_bottom=op.pad_bottom,
+                pad_right=op.pad_right,
+                count_include_pad=op.count_include_pad,
+                dtype=op.dtype,
+            )
+        if isinstance(op, BatchNormOp):
+            return BatchNormOp(
+                input0=name_map.get(op.input0, op.input0),
+                scale=name_map.get(op.scale, op.scale),
+                bias=name_map.get(op.bias, op.bias),
+                mean=name_map.get(op.mean, op.mean),
+                variance=name_map.get(op.variance, op.variance),
+                output=name_map.get(op.output, op.output),
+                shape=op.shape,
+                channels=op.channels,
+                epsilon=op.epsilon,
+                dtype=op.dtype,
+            )
+        if isinstance(op, LrnOp):
+            return LrnOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                shape=op.shape,
+                channels=op.channels,
+                size=op.size,
+                half=op.half,
+                alpha=op.alpha,
+                beta=op.beta,
+                bias=op.bias,
+                dtype=op.dtype,
+            )
+        if isinstance(op, LstmOp):
+            return LstmOp(
+                input_x=name_map.get(op.input_x, op.input_x),
+                input_w=name_map.get(op.input_w, op.input_w),
+                input_r=name_map.get(op.input_r, op.input_r),
+                input_b=self._map_optional_name(name_map, op.input_b),
+                input_sequence_lens=self._map_optional_name(
+                    name_map, op.input_sequence_lens
+                ),
+                input_initial_h=self._map_optional_name(
+                    name_map, op.input_initial_h
+                ),
+                input_initial_c=self._map_optional_name(
+                    name_map, op.input_initial_c
+                ),
+                input_p=self._map_optional_name(name_map, op.input_p),
+                output_y=self._map_optional_name(name_map, op.output_y),
+                output_y_h=self._map_optional_name(name_map, op.output_y_h),
+                output_y_c=self._map_optional_name(name_map, op.output_y_c),
+                seq_length=op.seq_length,
+                batch_size=op.batch_size,
+                input_size=op.input_size,
+                hidden_size=op.hidden_size,
+                num_directions=op.num_directions,
+                direction=op.direction,
+                layout=op.layout,
+                input_forget=op.input_forget,
+                clip=op.clip,
+                activation_kinds=op.activation_kinds,
+                activation_alphas=op.activation_alphas,
+                activation_betas=op.activation_betas,
+                dtype=op.dtype,
+                sequence_lens_dtype=op.sequence_lens_dtype,
+            )
+        if isinstance(op, SoftmaxOp):
+            return SoftmaxOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                outer=op.outer,
+                axis_size=op.axis_size,
+                inner=op.inner,
+                axis=op.axis,
+                shape=op.shape,
+                dtype=op.dtype,
+            )
+        if isinstance(op, LogSoftmaxOp):
+            return LogSoftmaxOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                outer=op.outer,
+                axis_size=op.axis_size,
+                inner=op.inner,
+                axis=op.axis,
+                shape=op.shape,
+                dtype=op.dtype,
+            )
+        if isinstance(op, NegativeLogLikelihoodLossOp):
+            return NegativeLogLikelihoodLossOp(
+                input0=name_map.get(op.input0, op.input0),
+                target=name_map.get(op.target, op.target),
+                weight=self._map_optional_name(name_map, op.weight),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                target_shape=op.target_shape,
+                output_shape=op.output_shape,
+                ignore_index=op.ignore_index,
+                reduction=op.reduction,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+                target_dtype=op.target_dtype,
+                weight_dtype=op.weight_dtype,
+                weight_shape=op.weight_shape,
+            )
+        if isinstance(op, SoftmaxCrossEntropyLossOp):
+            return SoftmaxCrossEntropyLossOp(
+                input0=name_map.get(op.input0, op.input0),
+                target=name_map.get(op.target, op.target),
+                weight=self._map_optional_name(name_map, op.weight),
+                output=name_map.get(op.output, op.output),
+                log_prob=self._map_optional_name(name_map, op.log_prob),
+                input_shape=op.input_shape,
+                target_shape=op.target_shape,
+                output_shape=op.output_shape,
+                log_prob_shape=op.log_prob_shape,
+                ignore_index=op.ignore_index,
+                reduction=op.reduction,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+                target_dtype=op.target_dtype,
+                weight_dtype=op.weight_dtype,
+                weight_shape=op.weight_shape,
+            )
+        if isinstance(op, MaxPoolOp):
+            return MaxPoolOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                indices=self._map_optional_name(name_map, op.indices),
+                batch=op.batch,
+                channels=op.channels,
+                spatial_rank=op.spatial_rank,
+                in_spatial=op.in_spatial,
+                out_spatial=op.out_spatial,
+                kernel_shape=op.kernel_shape,
+                strides=op.strides,
+                pads=op.pads,
+                dilations=op.dilations,
+                ceil_mode=op.ceil_mode,
+                storage_order=op.storage_order,
+                dtype=op.dtype,
+                indices_dtype=op.indices_dtype,
+            )
+        if isinstance(op, ConcatOp):
+            return ConcatOp(
+                inputs=tuple(
+                    name_map.get(name, name) for name in op.inputs
+                ),
+                output=name_map.get(op.output, op.output),
+                input_shapes=op.input_shapes,
+                output_shape=op.output_shape,
+                axis=op.axis,
+                dtype=op.dtype,
+            )
+        if isinstance(op, GatherElementsOp):
+            return GatherElementsOp(
+                data=name_map.get(op.data, op.data),
+                indices=name_map.get(op.indices, op.indices),
+                output=name_map.get(op.output, op.output),
+                data_shape=op.data_shape,
+                indices_shape=op.indices_shape,
+                output_shape=op.output_shape,
+                axis=op.axis,
+                dtype=op.dtype,
+                indices_dtype=op.indices_dtype,
+            )
+        if isinstance(op, GatherOp):
+            return GatherOp(
+                data=name_map.get(op.data, op.data),
+                indices=name_map.get(op.indices, op.indices),
+                output=name_map.get(op.output, op.output),
+                data_shape=op.data_shape,
+                indices_shape=op.indices_shape,
+                output_shape=op.output_shape,
+                axis=op.axis,
+                dtype=op.dtype,
+                indices_dtype=op.indices_dtype,
+            )
+        if isinstance(op, TransposeOp):
+            return TransposeOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                perm=op.perm,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        if isinstance(op, ReshapeOp):
+            return ReshapeOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        if isinstance(op, SliceOp):
+            return SliceOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                starts=op.starts,
+                steps=op.steps,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        if isinstance(op, ResizeOp):
+            return ResizeOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                roi_input=self._map_optional_name(name_map, op.roi_input),
+                scales_input=self._map_optional_name(name_map, op.scales_input),
+                sizes_input=self._map_optional_name(name_map, op.sizes_input),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                scales=op.scales,
+                axes=op.axes,
+                scales_shape=op.scales_shape,
+                sizes_shape=op.sizes_shape,
+                roi_shape=op.roi_shape,
+                scales_dtype=op.scales_dtype,
+                sizes_dtype=op.sizes_dtype,
+                roi_dtype=op.roi_dtype,
+                scales_axes=op.scales_axes,
+                sizes_axes=op.sizes_axes,
+                roi_axes=op.roi_axes,
+                mode=op.mode,
+                nearest_mode=op.nearest_mode,
+                coordinate_transformation_mode=op.coordinate_transformation_mode,
+                cubic_coeff_a=op.cubic_coeff_a,
+                extrapolation_value=op.extrapolation_value,
+                exclude_outside=op.exclude_outside,
+                antialias=op.antialias,
+                keep_aspect_ratio_policy=op.keep_aspect_ratio_policy,
+                dtype=op.dtype,
+            )
+        if isinstance(op, ReduceOp):
+            return ReduceOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                axes=op.axes,
+                axes_input=self._map_optional_name(name_map, op.axes_input),
+                axes_input_shape=op.axes_input_shape,
+                axes_input_dtype=op.axes_input_dtype,
+                keepdims=op.keepdims,
+                noop_with_empty_axes=op.noop_with_empty_axes,
+                reduce_kind=op.reduce_kind,
+                reduce_count=op.reduce_count,
+                dtype=op.dtype,
+            )
+        if isinstance(op, ConstantOfShapeOp):
+            return ConstantOfShapeOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                shape=op.shape,
+                value=op.value,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        if isinstance(op, ShapeOp):
+            return ShapeOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                values=op.values,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        if isinstance(op, SizeOp):
+            return SizeOp(
+                input0=name_map.get(op.input0, op.input0),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                output_shape=op.output_shape,
+                value=op.value,
+                dtype=op.dtype,
+                input_dtype=op.input_dtype,
+            )
+        return UnaryOp(
+            input0=name_map.get(op.input0, op.input0),
+            output=name_map.get(op.output, op.output),
+            operator=op.operator,
+            shape=op.shape,
+            dtype=op.dtype,
+        )
+
+    def _sanitize_model_names(self, model: LoweredModel) -> LoweredModel:
+        name_map = self._build_name_map(model)
+        constants = tuple(
+            ConstTensor(
+                name=name_map.get(const.name, const.name),
+                shape=const.shape,
+                data=const.data,
+                dtype=const.dtype,
+            )
+            for const in model.constants
+        )
+        ops = tuple(self._map_op_names(op, name_map) for op in model.ops)
+        return LoweredModel(
+            name=name_map.get(model.name, model.name),
+            input_names=tuple(
+                name_map.get(name, name) for name in model.input_names
+            ),
+            input_shapes=model.input_shapes,
+            input_dtypes=model.input_dtypes,
+            output_names=tuple(
+                name_map.get(name, name) for name in model.output_names
+            ),
+            output_shapes=model.output_shapes,
+            output_dtypes=model.output_dtypes,
+            constants=constants,
+            ops=ops,
+            node_infos=model.node_infos,
+            header=model.header,
+        )
+
     def _load_templates(self, emit_testbench: bool) -> dict[str, Template]:
         try:
             templates = {
@@ -675,6 +1474,7 @@ class CEmitter:
         return templates
 
     def emit_model(self, model: LoweredModel, *, emit_testbench: bool = False) -> str:
+        model = self._sanitize_model_names(model)
         templates = self._load_templates(emit_testbench)
         scalar_registry = ScalarFunctionRegistry()
         binary_template = templates["binary"]
@@ -707,7 +1507,13 @@ class CEmitter:
         shape_template = templates["shape"]
         size_template = templates["size"]
         testbench_template = templates.get("testbench")
-        temp_buffers = self._temp_buffers(model)
+        reserved_names = {
+            model.name,
+            *model.input_names,
+            *model.output_names,
+            *(const.name for const in model.constants),
+        }
+        temp_buffers = self._temp_buffers(model, reserved_names=reserved_names)
         temp_name_map = {
             original: buffer.name for original, buffer in temp_buffers.items()
         }
@@ -804,6 +1610,7 @@ class CEmitter:
     def emit_model_with_data_file(
         self, model: LoweredModel, *, emit_testbench: bool = False
     ) -> tuple[str, str]:
+        model = self._sanitize_model_names(model)
         templates = self._load_templates(emit_testbench)
         scalar_registry = ScalarFunctionRegistry()
         binary_template = templates["binary"]
@@ -836,7 +1643,13 @@ class CEmitter:
         shape_template = templates["shape"]
         size_template = templates["size"]
         testbench_template = templates.get("testbench")
-        temp_buffers = self._temp_buffers(model)
+        reserved_names = {
+            model.name,
+            *model.input_names,
+            *model.output_names,
+            *(const.name for const in model.constants),
+        }
+        temp_buffers = self._temp_buffers(model, reserved_names=reserved_names)
         temp_name_map = {
             original: buffer.name for original, buffer in temp_buffers.items()
         }
@@ -1565,8 +2378,24 @@ class CEmitter:
             return f"{op.input0}, {op.output}"
         return f"{op.input0}, {op.output}"
 
-    def _temp_buffers(self, model: LoweredModel) -> dict[str, TempBuffer]:
+    def _temp_buffers(
+        self, model: LoweredModel, *, reserved_names: set[str] | None = None
+    ) -> dict[str, TempBuffer]:
         output_names = set(model.output_names)
+        used_names = set(reserved_names or ())
+
+        def allocate_temp_name(base: str) -> str:
+            if base not in used_names:
+                used_names.add(base)
+                return base
+            index = 0
+            while True:
+                candidate = f"{base}{index}"
+                if candidate not in used_names:
+                    used_names.add(candidate)
+                    return candidate
+                index += 1
+
         intermediates = [
             (name, shape, dtype)
             for op in model.ops
@@ -1577,9 +2406,14 @@ class CEmitter:
             return {}
         if len(intermediates) == 1:
             name, shape, dtype = intermediates[0]
-            return {name: TempBuffer(name="tmp", shape=shape, dtype=dtype)}
+            temp_name = allocate_temp_name("tmp")
+            return {name: TempBuffer(name=temp_name, shape=shape, dtype=dtype)}
         return {
-            name: TempBuffer(name=f"tmp{index}", shape=shape, dtype=dtype)
+            name: TempBuffer(
+                name=allocate_temp_name(f"tmp{index}"),
+                shape=shape,
+                dtype=dtype,
+            )
             for index, (name, shape, dtype) in enumerate(intermediates)
         }
 
@@ -2077,6 +2911,7 @@ class CEmitter:
                 input_shape=op.input_shape,
                 output_shape=op.output_shape,
                 dtype=op.dtype,
+                input_dtype=op.input_dtype,
             )
         if isinstance(op, ReshapeOp):
             return ReshapeOp(
@@ -2085,6 +2920,7 @@ class CEmitter:
                 input_shape=op.input_shape,
                 output_shape=op.output_shape,
                 dtype=op.dtype,
+                input_dtype=op.input_dtype,
             )
         if isinstance(op, SliceOp):
             return SliceOp(
@@ -2095,6 +2931,7 @@ class CEmitter:
                 starts=op.starts,
                 steps=op.steps,
                 dtype=op.dtype,
+                input_dtype=op.input_dtype,
             )
         if isinstance(op, ResizeOp):
             return ResizeOp(
