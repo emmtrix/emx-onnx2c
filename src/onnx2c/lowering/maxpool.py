@@ -7,6 +7,7 @@ from ..codegen.c_emitter import MaxPoolOp
 from ..errors import ShapeInferenceError, UnsupportedOpError
 from ..ir.model import Graph, Node
 from .common import node_dtype as _node_dtype
+from .common import value_dtype as _value_dtype
 from .common import value_shape as _value_shape
 from .registry import register_lowering
 
@@ -26,8 +27,8 @@ class MaxPoolSpec:
 
 
 def resolve_maxpool_spec(graph: Graph, node: Node) -> MaxPoolSpec:
-    if len(node.inputs) != 1 or len(node.outputs) != 1:
-        raise UnsupportedOpError("MaxPool must have 1 input and 1 output")
+    if len(node.inputs) != 1 or len(node.outputs) not in {1, 2}:
+        raise UnsupportedOpError("MaxPool must have 1 input and 1 or 2 outputs")
     supported_attrs = {
         "auto_pad",
         "ceil_mode",
@@ -129,6 +130,16 @@ def resolve_maxpool_spec(graph: Graph, node: Node) -> MaxPoolSpec:
             "MaxPool output shape must be "
             f"{expected_output_shape}, got {output_shape}"
         )
+    if len(node.outputs) == 2:
+        indices_shape = _value_shape(graph, node.outputs[1], node)
+        if indices_shape != expected_output_shape:
+            raise ShapeInferenceError(
+                "MaxPool indices output shape must be "
+                f"{expected_output_shape}, got {indices_shape}"
+            )
+        indices_dtype = _value_dtype(graph, node.outputs[1], node)
+        if indices_dtype != "int64":
+            raise UnsupportedOpError("MaxPool indices output must be int64")
     pads = (*pad_begin, *pad_end)
     return MaxPoolSpec(
         batch=batch,
@@ -146,15 +157,22 @@ def resolve_maxpool_spec(graph: Graph, node: Node) -> MaxPoolSpec:
 
 @register_lowering("MaxPool")
 def lower_maxpool(graph: Graph, node: Node) -> MaxPoolOp:
-    if len(node.inputs) != 1 or len(node.outputs) != 1:
-        raise UnsupportedOpError("MaxPool must have 1 input and 1 output")
-    op_dtype = _node_dtype(graph, node, *node.inputs, *node.outputs)
+    if len(node.inputs) != 1 or len(node.outputs) not in {1, 2}:
+        raise UnsupportedOpError("MaxPool must have 1 input and 1 or 2 outputs")
+    op_dtype = _node_dtype(graph, node, node.inputs[0], node.outputs[0])
     if op_dtype == "bool":
         raise UnsupportedOpError("MaxPool supports numeric inputs only")
     spec = resolve_maxpool_spec(graph, node)
+    indices = node.outputs[1] if len(node.outputs) == 2 else None
+    indices_dtype = (
+        _value_dtype(graph, indices, node) if indices is not None else None
+    )
+    if indices_dtype is not None and indices_dtype != "int64":
+        raise UnsupportedOpError("MaxPool indices output must be int64")
     return MaxPoolOp(
         input0=node.inputs[0],
         output=node.outputs[0],
+        indices=indices,
         batch=spec.batch,
         channels=spec.channels,
         spatial_rank=spec.spatial_rank,
@@ -166,4 +184,5 @@ def lower_maxpool(graph: Graph, node: Node) -> MaxPoolOp:
         dilations=spec.dilations,
         ceil_mode=spec.ceil_mode,
         dtype=op_dtype,
+        indices_dtype=indices_dtype,
     )
