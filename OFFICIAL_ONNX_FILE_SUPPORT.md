@@ -665,7 +665,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_gemm_beta/model.onnx | ✅ |  |
 | node/test_gemm_default_matrix_bias/model.onnx | ✅ |  |
 | node/test_gemm_default_no_bias/model.onnx | ✅ |  |
-| node/test_gemm_default_scalar_bias/model.onnx | ❌ | Gemm bias input must be rank 1 or 2, got () |
+| node/test_gemm_default_scalar_bias/model.onnx | ✅ |  |
 | node/test_gemm_default_single_elem_vector_bias/model.onnx | ❌ | Gemm bias input must be broadcastable to output shape, got (1,) vs (3, 3) |
 | node/test_gemm_default_vector_bias/model.onnx | ✅ |  |
 | node/test_gemm_default_zero_bias/model.onnx | ✅ |  |
