@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from typing import Mapping
+from typing import Mapping, Sequence
 
 from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 
@@ -1534,10 +1534,22 @@ class CEmitter:
         *,
         emit_testbench: bool = False,
         testbench_inputs: Mapping[str, tuple[float | int | bool, ...]] | None = None,
+        variable_dim_inputs: Mapping[int, Sequence[int]] | None = None,
+        variable_dim_outputs: Mapping[int, Sequence[int]] | None = None,
     ) -> str:
         model, name_map = self._sanitize_model_names_with_map(model)
         testbench_inputs = self._sanitize_testbench_inputs(
             testbench_inputs, name_map
+        )
+        (
+            dim_order,
+            input_dim_names,
+            output_dim_names,
+            dim_values,
+        ) = self._build_variable_dim_names(
+            model,
+            variable_dim_inputs,
+            variable_dim_outputs,
         )
         templates = self._load_templates(emit_testbench)
         scalar_registry = ScalarFunctionRegistry()
@@ -1632,6 +1644,9 @@ class CEmitter:
             model,
             resolved_ops,
             tuple(temp_buffers.values()),
+            dim_order=dim_order,
+            input_dim_names=input_dim_names,
+            output_dim_names=output_dim_names,
         )
         scalar_functions = scalar_registry.render()
         scalar_include_lines = (
@@ -1673,6 +1688,8 @@ class CEmitter:
                         model,
                         testbench_template,
                         testbench_inputs=testbench_inputs,
+                        dim_order=dim_order,
+                        dim_values=dim_values,
                     ),
                 )
             )
@@ -1688,10 +1705,22 @@ class CEmitter:
         *,
         emit_testbench: bool = False,
         testbench_inputs: Mapping[str, tuple[float | int | bool, ...]] | None = None,
+        variable_dim_inputs: Mapping[int, Sequence[int]] | None = None,
+        variable_dim_outputs: Mapping[int, Sequence[int]] | None = None,
     ) -> tuple[str, str]:
         model, name_map = self._sanitize_model_names_with_map(model)
         testbench_inputs = self._sanitize_testbench_inputs(
             testbench_inputs, name_map
+        )
+        (
+            dim_order,
+            input_dim_names,
+            output_dim_names,
+            dim_values,
+        ) = self._build_variable_dim_names(
+            model,
+            variable_dim_inputs,
+            variable_dim_outputs,
         )
         templates = self._load_templates(emit_testbench)
         scalar_registry = ScalarFunctionRegistry()
@@ -1786,6 +1815,9 @@ class CEmitter:
             model,
             resolved_ops,
             tuple(temp_buffers.values()),
+            dim_order=dim_order,
+            input_dim_names=input_dim_names,
+            output_dim_names=output_dim_names,
         )
         scalar_functions = scalar_registry.render()
         scalar_include_lines = (
@@ -1827,6 +1859,8 @@ class CEmitter:
                         model,
                         testbench_template,
                         testbench_inputs=testbench_inputs,
+                        dim_order=dim_order,
+                        dim_values=dim_values,
                     ),
                 )
             )
@@ -2401,18 +2435,27 @@ class CEmitter:
             | SizeOp
         ],
         temp_buffers: tuple[TempBuffer, ...],
+        *,
+        dim_order: Sequence[str],
+        input_dim_names: Mapping[int, Mapping[int, str]],
+        output_dim_names: Mapping[int, Mapping[int, str]],
     ) -> str:
-        params = [
-            f"const {dtype.c_type} {name}{self._param_array_suffix(shape)}"
-            for name, shape, dtype in zip(
-                model.input_names, model.input_shapes, model.input_dtypes
-            )
-        ]
-        for name, shape, dtype in zip(
-            model.output_names, model.output_shapes, model.output_dtypes
+        params = []
+        if dim_order:
+            params.extend(self._format_dim_args(dim_order))
+        for index, (name, shape, dtype) in enumerate(
+            zip(model.input_names, model.input_shapes, model.input_dtypes)
         ):
             params.append(
-                f"{dtype.c_type} {name}{self._param_array_suffix(shape)}"
+                f"const {dtype.c_type} {name}"
+                f"{self._param_array_suffix(shape, input_dim_names.get(index))}"
+            )
+        for index, (name, shape, dtype) in enumerate(
+            zip(model.output_names, model.output_shapes, model.output_dtypes)
+        ):
+            params.append(
+                f"{dtype.c_type} {name}"
+                f"{self._param_array_suffix(shape, output_dim_names.get(index))}"
             )
         signature = ", ".join(params)
         lines = [f"void {model.name}({signature}) {{"]
@@ -4861,12 +4904,100 @@ class CEmitter:
         shape = CEmitter._codegen_shape(shape)
         return "".join(f"[{dim}]" for dim in shape)
 
-    def _param_array_suffix(self, shape: tuple[int, ...]) -> str:
+    def _param_array_suffix(
+        self,
+        shape: tuple[int, ...],
+        dim_names: Mapping[int, str] | None = None,
+    ) -> str:
         shape = CEmitter._codegen_shape(shape)
+        dim_names = dim_names or {}
         if not self._restrict_arrays:
-            return "".join(f"[{dim}]" for dim in shape)
+            return "".join(
+                f"[{dim_names.get(index, dim)}]"
+                for index, dim in enumerate(shape)
+            )
         first, *rest = shape
-        return f"[restrict {first}]" + "".join(f"[{dim}]" for dim in rest)
+        first_dim = dim_names.get(0, first)
+        rest_dims = "".join(
+            f"[{dim_names.get(index + 1, dim)}]"
+            for index, dim in enumerate(rest)
+        )
+        return f"[restrict {first_dim}]{rest_dims}"
+
+    @staticmethod
+    def _format_dim_args(dim_order: Sequence[str]) -> list[str]:
+        return [f"int {dim_name}" for dim_name in dim_order]
+
+    def _build_variable_dim_names(
+        self,
+        model: LoweredModel,
+        variable_dim_inputs: Mapping[int, Sequence[int]] | None,
+        variable_dim_outputs: Mapping[int, Sequence[int]] | None,
+    ) -> tuple[
+        list[str],
+        dict[int, dict[int, str]],
+        dict[int, dict[int, str]],
+        dict[str, int],
+    ]:
+        variable_dim_inputs = variable_dim_inputs or {}
+        variable_dim_outputs = variable_dim_outputs or {}
+        dim_order: list[str] = []
+        dim_vars: dict[tuple[str, int, int], str] = {}
+        dim_values: dict[str, int] = {}
+
+        def _register_dim(
+            kind: str, tensor_index: int, dim_index: int, dim_value: int
+        ) -> str:
+            key = (kind, tensor_index, dim_index)
+            if key not in dim_vars:
+                dim_name = f"dim{len(dim_order) + 1}"
+                dim_vars[key] = dim_name
+                dim_order.append(dim_name)
+                dim_values[dim_name] = dim_value
+            else:
+                dim_name = dim_vars[key]
+                if dim_values[dim_name] != dim_value:
+                    raise CodegenError(
+                        "Variable dimension values must be consistent, "
+                        f"got {dim_values[dim_name]} and {dim_value} for {dim_name}"
+                    )
+            return dim_vars[key]
+
+        def _build_dim_names(
+            kind: str,
+            tensor_index: int,
+            shape: tuple[int, ...],
+            variable_dims: Mapping[int, Sequence[int]],
+        ) -> dict[int, str]:
+            dim_names: dict[int, str] = {}
+            for dim_index in variable_dims.get(tensor_index, ()):
+                if dim_index < 0 or dim_index >= len(shape):
+                    raise CodegenError(
+                        f"Variable {kind} dim {dim_index} is out of range for shape {shape}"
+                    )
+                dim_name = _register_dim(
+                    kind, tensor_index, dim_index, shape[dim_index]
+                )
+                dim_names[dim_index] = dim_name
+            return dim_names
+
+        input_dim_names: dict[int, dict[int, str]] = {}
+        for index, shape in enumerate(model.input_shapes):
+            dim_names = _build_dim_names(
+                "input", index, shape, variable_dim_inputs
+            )
+            if dim_names:
+                input_dim_names[index] = dim_names
+
+        output_dim_names: dict[int, dict[int, str]] = {}
+        for index, shape in enumerate(model.output_shapes):
+            dim_names = _build_dim_names(
+                "output", index, shape, variable_dim_outputs
+            )
+            if dim_names:
+                output_dim_names[index] = dim_names
+
+        return dim_order, input_dim_names, output_dim_names, dim_values
 
     @staticmethod
     def _loop_vars(shape: tuple[int, ...]) -> tuple[str, ...]:
@@ -4958,6 +5089,8 @@ class CEmitter:
         testbench_template,
         *,
         testbench_inputs: Mapping[str, tuple[float | int | bool, ...]] | None = None,
+        dim_order: Sequence[str],
+        dim_values: Mapping[str, int],
     ) -> str:
         input_counts = tuple(
             self._element_count(shape) for shape in model.input_shapes
@@ -5029,6 +5162,10 @@ class CEmitter:
             )
         rendered = testbench_template.render(
             model_name=model.name,
+            dim_args=[
+                {"name": dim_name, "value": dim_values[dim_name]}
+                for dim_name in dim_order
+            ],
             inputs=inputs,
             outputs=outputs,
         ).rstrip()
