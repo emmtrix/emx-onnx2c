@@ -169,17 +169,17 @@ class Compiler:
     @staticmethod
     def _collect_variable_dims(
         graph: Graph,
-    ) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
-        def collect(values: tuple[Value, ...]) -> dict[int, list[int]]:
-            dim_map: dict[int, list[int]] = {}
+    ) -> tuple[dict[int, dict[int, str]], dict[int, dict[int, str]]]:
+        def collect(values: tuple[Value, ...]) -> dict[int, dict[int, str]]:
+            dim_map: dict[int, dict[int, str]] = {}
             for index, value in enumerate(values):
-                dims = [
-                    dim_index
+                dims = {
+                    dim_index: dim_param
                     for dim_index, dim_param in enumerate(
                         value.type.dim_params
                     )
                     if dim_param
-                ]
+                }
                 if dims:
                     dim_map[index] = dims
             return dim_map

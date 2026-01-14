@@ -25,6 +25,7 @@
 | Unsupported op Trilu | 16 | ████████ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 14 | ███████ |
 | Unsupported op ConvTranspose | 14 | ███████ |
+| '*' object has no attribute '*' | 13 | ███████ |
 | ReduceSum output shape rank must match input rank | 12 | ██████ |
 | Unsupported op CumSum | 9 | █████ |
 | Unsupported op ImageDecoder | 9 | █████ |
