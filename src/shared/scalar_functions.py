@@ -411,6 +411,7 @@ _ONNX_OP_TO_SCALAR_FUNCTION = {
     "Sinh": ScalarFunction.SINH,
     "Softplus": ScalarFunction.SOFTPLUS,
     "Softsign": ScalarFunction.SOFTSIGN,
+    "Shrink": ScalarFunction.SHRINK,
     "Sqrt": ScalarFunction.SQRT,
     "Sub": ScalarFunction.SUB,
     "Sum": ScalarFunction.ADD,
@@ -2261,4 +2262,3 @@ class ScalarFunctionRegistry:
         if key in self._generated:
             return
         self._generated[key] = _generate_scalar(key)
-    "Shrink": ScalarFunction.SHRINK,
