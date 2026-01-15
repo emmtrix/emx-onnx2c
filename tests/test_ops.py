@@ -18,6 +18,7 @@ from shared.scalar_types import ScalarType
 
 from onnx2c.codegen.c_emitter import MultiInputBinaryOp
 from onnx2c.compiler import Compiler, CompilerOptions
+from onnx2c.errors import UnsupportedOpError
 from onnx2c.lowering.flatten import lower_flatten
 from onnx2c.lowering.squeeze import lower_squeeze
 from onnx2c.lowering import variadic as _variadic  # noqa: F401
@@ -2532,6 +2533,41 @@ def test_lower_flatten_negative_axis() -> None:
     graph = import_onnx(model)
     op = lower_flatten(graph, graph.nodes[0])
     assert op.output_shape == (6, 4)
+
+
+def test_lower_pad_dynamic_axes_rejected() -> None:
+    input_info = helper.make_tensor_value_info(
+        "input", TensorProto.FLOAT, [2, 3]
+    )
+    pads_info = helper.make_tensor_value_info("pads", TensorProto.INT64, [4])
+    axes_info = helper.make_tensor_value_info("axes", TensorProto.INT64, [2])
+    output_info = helper.make_tensor_value_info(
+        "output", TensorProto.FLOAT, [2, 3]
+    )
+    node = helper.make_node(
+        "Pad",
+        inputs=["input", "pads", "", "axes"],
+        outputs=[output_info.name],
+        mode="constant",
+    )
+    graph = helper.make_graph(
+        [node],
+        "pad_axes_graph",
+        [input_info, pads_info, axes_info],
+        [output_info],
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="onnx2c",
+        opset_imports=[helper.make_operatorsetid("", 18)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    graph = import_onnx(model)
+    with pytest.raises(
+        UnsupportedOpError, match="Pad axes input must be a constant initializer"
+    ):
+        get_lowering("Pad")(graph, graph.nodes[0])
 
 
 def test_lower_squeeze_axes_input() -> None:

@@ -66,7 +66,6 @@
 | Unsupported op Bernoulli | 3 | ██ |
 | Unsupported op RandomUniformLike | 3 | ██ |
 | Unsupported op DynamicQuantizeLinear | 3 | ██ |
-| Pad output shape mismatch: expected (1, 3, 4, 5), got (1, 3, 6, 7) | 3 | ██ |
 | Elu only supports alpha=1.0 | 3 | ██ |
 | Unsupported op GatherND | 3 | ██ |
 | HardSigmoid only supports alpha=0.2 | 3 | ██ |
@@ -111,11 +110,7 @@
 | Unsupported op Gradient | 2 | ██ |
 | Unsupported op ArrayFeatureExtractor | 1 | █ |
 | Unsupported op Binarizer | 1 | █ |
-| Pad output shape mismatch: expected (20, 8, 3), got (1, 1, 1) | 1 | █ |
-| Pad output shape mismatch: expected (20, 10, 3), got (1, 1, 1) | 1 | █ |
-| Pad output shape mismatch: expected (10, 7, 3), got (1, 1, 1) | 1 | █ |
 | Graph must contain at least one node | 1 | █ |
-| Pad output shape mismatch: expected (1, 3, 4, 5), got (1, 3, 7, 12) | 1 | █ |
 | Dropout mask output is not supported | 1 | █ |
 | Unsupported op MatMulInteger | 1 | █ |
 | Max must have at least 2 inputs | 1 | █ |
