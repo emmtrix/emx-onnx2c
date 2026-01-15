@@ -394,9 +394,12 @@ def _make_test_case(model_fn: Callable[[], onnx.ModelProto], filename: str) -> C
     return _test
 
 
+# Each entry is (class_name, op_name, model_factory). class_name must be a single
+# token without underscores; filenames and test names are generated as:
+#   test_op_<class_name>_<op_name> and op_<class_name>_<op_name>.c
 OP_GOLDEN_CASES = [
     ("binary", "mul", _make_binary_mul_model),
-    ("multi_input_binary", "sum", _make_multi_input_sum_model),
+    ("multiinputbinary", "sum", _make_multi_input_sum_model),
     ("where", "where", _make_where_model),
     ("unary", "tanh", _make_unary_tanh_model),
     ("clip", "clip", _make_clip_model),
@@ -405,51 +408,51 @@ OP_GOLDEN_CASES = [
     ("gemm", "gemm", _make_gemm_model),
     ("attention", "attention", _make_attention_model),
     ("conv", "conv", _make_conv_model),
-    ("average_pool", "average_pool", _make_average_pool_model),
+    ("averagepool", "average_pool", _make_average_pool_model),
     ("softmax", "softmax", _make_softmax_model),
     ("logsoftmax", "logsoftmax", _make_logsoftmax_model),
     (
-        "negative_log_likelihood_loss",
+        "negativeloglikelihoodloss",
         "negative_log_likelihood_loss",
         _make_negative_log_likelihood_loss_model,
     ),
     (
-        "softmax_cross_entropy_loss",
+        "softmaxcrossentropyloss",
         "softmax_cross_entropy_loss",
         _make_softmax_cross_entropy_loss_model,
     ),
-    ("batch_norm", "batch_normalization", lambda: _make_batchnorm_model()[0]),
+    ("batchnorm", "batch_normalization", lambda: _make_batchnorm_model()[0]),
     (
-        "lp_normalization",
+        "lpnormalization",
         "lp_normalization",
         lambda: _make_lp_normalization_model(input_shape=[2, 3], axis=-1, p=1),
     ),
     (
-        "instance_normalization",
+        "instancenormalization",
         "instance_normalization",
         lambda: _make_instance_normalization_model(input_shape=[1, 3, 2, 2]),
     ),
     (
-        "group_normalization",
+        "groupnormalization",
         "group_normalization",
         lambda: _make_group_normalization_model(
             input_shape=[1, 4, 2, 2], num_groups=2
         ),
     ),
     (
-        "layer_normalization",
+        "layernormalization",
         "layer_normalization",
         lambda: _make_layer_normalization_model(input_shape=[2, 3, 4], axis=1),
     ),
     (
-        "mean_variance_normalization",
+        "meanvariancenormalization",
         "mean_variance_normalization",
         lambda: _make_mean_variance_normalization_model(
             input_shape=[2, 3, 4], axes=[-1]
         ),
     ),
     (
-        "rms_normalization",
+        "rmsnormalization",
         "rms_normalization",
         lambda: _make_rms_normalization_model(input_shape=[2, 3, 4], axis=-1),
     ),
@@ -468,7 +471,7 @@ OP_GOLDEN_CASES = [
     ),
     ("concat", "concat", _make_concat_model),
     (
-        "gather_elements",
+        "gatherelements",
         "gather_elements",
         lambda: _make_gather_elements_model(
             data_shape=[2, 3], indices_shape=[2, 3], axis=0
@@ -485,7 +488,7 @@ OP_GOLDEN_CASES = [
     ("reshape", "reshape", _make_reshape_model),
     ("identity", "identity", _make_identity_model),
     (
-        "eye_like",
+        "eyelike",
         "eye_like",
         lambda: _make_eye_like_model(input_shape=[3, 3], dtype=TensorProto.FLOAT),
     ),
@@ -503,12 +506,12 @@ OP_GOLDEN_CASES = [
             input_shape=[2, 3], pads=[0, 1, 0, 1], value=0.0, dtype=TensorProto.FLOAT
         ),
     ),
-    ("depth_to_space", "depth_to_space", _make_depth_to_space_model),
-    ("space_to_depth", "space_to_depth", _make_space_to_depth_model),
+    ("depthtospace", "depth_to_space", _make_depth_to_space_model),
+    ("spacetodepth", "space_to_depth", _make_space_to_depth_model),
     ("slice", "slice", _make_slice_model),
     ("resize", "resize", _make_resize_model),
     (
-        "grid_sample",
+        "gridsample",
         "grid_sample",
         lambda: _make_gridsample_model(
             input_shape=[1, 1, 2, 2],
@@ -517,8 +520,8 @@ OP_GOLDEN_CASES = [
         ),
     ),
     ("reduce", "reduce_mean", _make_reduce_mean_model),
-    ("arg_reduce", "arg_max", _make_argmax_model),
-    ("constant_of_shape", "constant_of_shape", _make_constant_of_shape_model),
+    ("argreduce", "arg_max", _make_argmax_model),
+    ("constantofshape", "constant_of_shape", _make_constant_of_shape_model),
     ("shape", "shape", lambda: _make_shape_model(input_shape=[2, 3, 4])),
     ("size", "size", lambda: _make_size_model(input_shape=[2, 3, 4])),
     (
