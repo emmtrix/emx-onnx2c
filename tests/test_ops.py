@@ -19,6 +19,7 @@ from shared.scalar_types import ScalarType
 from onnx2c.codegen.c_emitter import MultiInputBinaryOp
 from onnx2c.compiler import Compiler, CompilerOptions
 from onnx2c.lowering.flatten import lower_flatten
+from onnx2c.lowering.grid_sample import lower_grid_sample
 from onnx2c.lowering.squeeze import lower_squeeze
 from onnx2c.lowering import variadic as _variadic  # noqa: F401
 from onnx2c.lowering.registry import get_lowering
@@ -1082,6 +1083,49 @@ def _make_resize_model() -> onnx.ModelProto:
         graph,
         producer_name="onnx2c",
         opset_imports=[helper.make_operatorsetid("", 13)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    return model
+
+
+def _make_gridsample_model(
+    *,
+    input_shape: list[int],
+    grid_shape: list[int],
+    output_shape: list[int],
+    mode: str = "linear",
+    padding_mode: str = "zeros",
+    align_corners: int = 0,
+    opset: int = 22,
+) -> onnx.ModelProto:
+    input_info = helper.make_tensor_value_info(
+        "x", TensorProto.FLOAT, input_shape
+    )
+    grid_info = helper.make_tensor_value_info(
+        "grid", TensorProto.FLOAT, grid_shape
+    )
+    output = helper.make_tensor_value_info(
+        "y", TensorProto.FLOAT, output_shape
+    )
+    node = helper.make_node(
+        "GridSample",
+        inputs=["x", "grid"],
+        outputs=[output.name],
+        mode=mode,
+        padding_mode=padding_mode,
+        align_corners=align_corners,
+    )
+    graph = helper.make_graph(
+        [node],
+        "gridsample_graph",
+        [input_info, grid_info],
+        [output],
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="onnx2c",
+        opset_imports=[helper.make_operatorsetid("", opset)],
     )
     model.ir_version = 7
     onnx.checker.check_model(model)
@@ -2483,6 +2527,20 @@ def test_lower_squeeze_default_axes() -> None:
     assert op.output_shape == (3, 5)
 
 
+def test_lower_gridsample_builds_spec() -> None:
+    model = _make_gridsample_model(
+        input_shape=[1, 2, 3, 4],
+        grid_shape=[1, 5, 6, 2],
+        output_shape=[1, 2, 5, 6],
+    )
+    graph = import_onnx(model)
+    op = lower_grid_sample(graph, graph.nodes[0])
+    assert op.spatial_rank == 2
+    assert op.input_spatial == (3, 4)
+    assert op.output_spatial == (5, 6)
+    assert op.mode == "linear"
+
+
 def test_lower_variadic_sum_uses_multi_input_op() -> None:
     model = _make_operator_model(
         op_type="Sum",
@@ -2837,6 +2895,18 @@ def test_cast_op_matches_onnxruntime() -> None:
 
 def test_resize_op_matches_onnxruntime() -> None:
     model = _make_resize_model()
+    _run_testbench_compare(model)
+
+
+def test_gridsample_op_matches_onnxruntime() -> None:
+    model = _make_gridsample_model(
+        input_shape=[1, 1, 3, 4],
+        grid_shape=[1, 2, 3, 2],
+        output_shape=[1, 1, 2, 3],
+        mode="linear",
+        padding_mode="zeros",
+        align_corners=0,
+    )
     _run_testbench_compare(model)
 
 

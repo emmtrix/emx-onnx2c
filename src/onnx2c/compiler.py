@@ -49,6 +49,7 @@ from .codegen.c_emitter import (
     ArgReduceOp,
     ReshapeOp,
     ResizeOp,
+    GridSampleOp,
     SoftmaxOp,
     ShapeOp,
     SliceOp,
@@ -106,6 +107,7 @@ from .lowering.reduce import (
 from .lowering import arg_reduce as _arg_reduce  # noqa: F401
 from .lowering.reshape import lower_reshape
 from .lowering.resize import lower_resize
+from .lowering.grid_sample import lower_grid_sample
 from .lowering.slice import lower_slice
 from .lowering.squeeze import lower_squeeze
 from .lowering import depth_space as _depth_space  # noqa: F401
@@ -351,6 +353,7 @@ class Compiler:
             | ReshapeOp
             | SliceOp
             | ResizeOp
+            | GridSampleOp
             | ReduceOp
             | ArgReduceOp
             | ShapeOp

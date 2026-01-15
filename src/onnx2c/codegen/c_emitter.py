@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import itertools
 from pathlib import Path
 import re
 from typing import Mapping, Sequence
@@ -711,6 +712,24 @@ class ResizeOp:
 
 
 @dataclass(frozen=True)
+class GridSampleOp:
+    input0: str
+    grid: str
+    output: str
+    input_shape: tuple[int, ...]
+    grid_shape: tuple[int, ...]
+    output_shape: tuple[int, ...]
+    spatial_rank: int
+    input_spatial: tuple[int, ...]
+    output_spatial: tuple[int, ...]
+    mode: str
+    padding_mode: str
+    align_corners: bool
+    dtype: ScalarType
+    grid_dtype: ScalarType
+
+
+@dataclass(frozen=True)
 class ReduceOp:
     input0: str
     output: str
@@ -895,6 +914,7 @@ class LoweredModel:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -978,6 +998,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -1153,6 +1174,8 @@ class CEmitter:
                 names.append(op.sizes_input)
             names.append(op.output)
             return tuple(names)
+        if isinstance(op, GridSampleOp):
+            return (op.input0, op.grid, op.output)
         if isinstance(op, ReduceOp):
             names = [op.input0]
             if op.axes_input is not None:
@@ -1226,6 +1249,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -1273,6 +1297,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -1858,6 +1883,23 @@ class CEmitter:
                 keep_aspect_ratio_policy=op.keep_aspect_ratio_policy,
                 dtype=op.dtype,
             )
+        if isinstance(op, GridSampleOp):
+            return GridSampleOp(
+                input0=name_map.get(op.input0, op.input0),
+                grid=name_map.get(op.grid, op.grid),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                grid_shape=op.grid_shape,
+                output_shape=op.output_shape,
+                spatial_rank=op.spatial_rank,
+                input_spatial=op.input_spatial,
+                output_spatial=op.output_spatial,
+                mode=op.mode,
+                padding_mode=op.padding_mode,
+                align_corners=op.align_corners,
+                dtype=op.dtype,
+                grid_dtype=op.grid_dtype,
+            )
         if isinstance(op, ReduceOp):
             return ReduceOp(
                 input0=name_map.get(op.input0, op.input0),
@@ -2065,6 +2107,7 @@ class CEmitter:
                     "slice_op_dynamic.c.j2"
                 ),
                 "resize": self._env.get_template("resize_op.c.j2"),
+                "grid_sample": self._env.get_template("grid_sample_op.c.j2"),
                 "reduce": self._env.get_template("reduce_op.c.j2"),
                 "reduce_dynamic": self._env.get_template(
                     "reduce_op_dynamic.c.j2"
@@ -2155,6 +2198,7 @@ class CEmitter:
         slice_template = templates["slice"]
         slice_dynamic_template = templates["slice_dynamic"]
         resize_template = templates["resize"]
+        grid_sample_template = templates["grid_sample"]
         reduce_template = templates["reduce"]
         reduce_dynamic_template = templates["reduce_dynamic"]
         arg_reduce_template = templates["arg_reduce"]
@@ -2226,6 +2270,7 @@ class CEmitter:
                 slice_template=slice_template,
                 slice_dynamic_template=slice_dynamic_template,
                 resize_template=resize_template,
+                grid_sample_template=grid_sample_template,
                 reduce_template=reduce_template,
                 reduce_dynamic_template=reduce_dynamic_template,
                 arg_reduce_template=arg_reduce_template,
@@ -2370,6 +2415,7 @@ class CEmitter:
         slice_template = templates["slice"]
         slice_dynamic_template = templates["slice_dynamic"]
         resize_template = templates["resize"]
+        grid_sample_template = templates["grid_sample"]
         reduce_template = templates["reduce"]
         reduce_dynamic_template = templates["reduce_dynamic"]
         arg_reduce_template = templates["arg_reduce"]
@@ -2441,6 +2487,7 @@ class CEmitter:
                 slice_template=slice_template,
                 slice_dynamic_template=slice_dynamic_template,
                 resize_template=resize_template,
+                grid_sample_template=grid_sample_template,
                 reduce_template=reduce_template,
                 reduce_dynamic_template=reduce_dynamic_template,
                 arg_reduce_template=arg_reduce_template,
@@ -2762,6 +2809,7 @@ class CEmitter:
             | SpaceToDepthOp
             | SliceOp
             | ResizeOp
+            | GridSampleOp
             | ReduceOp
             | ArgReduceOp
             | ConstantOfShapeOp
@@ -2941,6 +2989,7 @@ class CEmitter:
             | SpaceToDepthOp
             | SliceOp
             | ResizeOp
+            | GridSampleOp
             | ReduceOp
             | ArgReduceOp
             | ConstantOfShapeOp
@@ -3020,6 +3069,7 @@ class CEmitter:
                     LogSoftmaxOp,
                     SoftmaxCrossEntropyLossOp,
                     ResizeOp,
+                    GridSampleOp,
                 ),
             )
             for op in resolved_ops
@@ -3083,6 +3133,7 @@ class CEmitter:
             | SpaceToDepthOp
             | SliceOp
             | ResizeOp
+            | GridSampleOp
             | ReduceOp
             | ArgReduceOp
             | ConstantOfShapeOp
@@ -3161,6 +3212,7 @@ class CEmitter:
             | SpaceToDepthOp
             | SliceOp
             | ResizeOp
+            | GridSampleOp
             | ReduceOp
             | ArgReduceOp
             | ConstantOfShapeOp
@@ -3244,6 +3296,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -3445,6 +3498,9 @@ class CEmitter:
             call_parts.append(op.output)
             args.extend(call_parts)
             return ", ".join(args)
+        if isinstance(op, GridSampleOp):
+            args.extend([op.input0, op.grid, op.output])
+            return ", ".join(args)
         if isinstance(op, ReduceOp):
             if op.axes_input is not None:
                 args.extend([op.input0, op.axes_input, op.output])
@@ -3535,6 +3591,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -3582,6 +3639,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -4318,6 +4376,23 @@ class CEmitter:
                 keep_aspect_ratio_policy=op.keep_aspect_ratio_policy,
                 dtype=op.dtype,
             )
+        if isinstance(op, GridSampleOp):
+            return GridSampleOp(
+                input0=temp_map.get(op.input0, op.input0),
+                grid=temp_map.get(op.grid, op.grid),
+                output=temp_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                grid_shape=op.grid_shape,
+                output_shape=op.output_shape,
+                spatial_rank=op.spatial_rank,
+                input_spatial=op.input_spatial,
+                output_spatial=op.output_spatial,
+                mode=op.mode,
+                padding_mode=op.padding_mode,
+                align_corners=op.align_corners,
+                dtype=op.dtype,
+                grid_dtype=op.grid_dtype,
+            )
         if isinstance(op, ReduceOp):
             return ReduceOp(
                 input0=temp_map.get(op.input0, op.input0),
@@ -4397,6 +4472,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -4451,6 +4527,7 @@ class CEmitter:
         slice_template,
         slice_dynamic_template,
         resize_template,
+        grid_sample_template,
         reduce_template,
         reduce_dynamic_template,
         arg_reduce_template,
@@ -5820,6 +5897,46 @@ class CEmitter:
                 keep_aspect_ratio_policy=op.keep_aspect_ratio_policy,
             ).rstrip()
             return with_node_comment(rendered)
+        if isinstance(op, GridSampleOp):
+            input_suffix = self._param_array_suffix(op.input_shape)
+            grid_suffix = self._param_array_suffix(op.grid_shape)
+            output_suffix = self._param_array_suffix(op.output_shape)
+            params = [
+                f"const {c_type} {op.input0}{input_suffix}",
+                f"const {op.grid_dtype.c_type} {op.grid}{grid_suffix}",
+                f"{c_type} {op.output}{output_suffix}",
+            ]
+            output_loop_vars = CEmitter._loop_vars(op.output_shape)
+            rendered = grid_sample_template.render(
+                model_name=model.name,
+                op_name=f"{model.name}_op{index}",
+                params=params,
+                input0=op.input0,
+                grid=op.grid,
+                output=op.output,
+                c_type=c_type,
+                grid_c_type=op.grid_dtype.c_type,
+                input_suffix=input_suffix,
+                grid_suffix=grid_suffix,
+                output_suffix=output_suffix,
+                input_shape=op.input_shape,
+                grid_shape=op.grid_shape,
+                output_shape=op.output_shape,
+                spatial_rank=op.spatial_rank,
+                input_spatial=op.input_spatial,
+                output_spatial=op.output_spatial,
+                output_loop_vars=output_loop_vars,
+                mode=op.mode,
+                padding_mode=op.padding_mode,
+                align_corners=op.align_corners,
+                linear_offsets=tuple(
+                    itertools.product((0, 1), repeat=op.spatial_rank)
+                ),
+                cubic_offsets=tuple(
+                    itertools.product(range(4), repeat=op.spatial_rank)
+                ),
+            ).rstrip()
+            return with_node_comment(rendered)
         if isinstance(op, ReduceOp) and op.axes_input is None:
             output_shape = CEmitter._codegen_shape(op.output_shape)
             output_loop_vars = CEmitter._loop_vars(output_shape)
@@ -6382,6 +6499,7 @@ class CEmitter:
         | DepthToSpaceOp
         | SpaceToDepthOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -6433,6 +6551,7 @@ class CEmitter:
         | DepthToSpaceOp
         | SpaceToDepthOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -6479,6 +6598,8 @@ class CEmitter:
             return ((op.input0, op.shape),)
         if isinstance(op, EyeLikeOp):
             return ((op.input0, op.output_shape),)
+        if isinstance(op, GridSampleOp):
+            return ((op.input0, op.input_shape), (op.grid, op.grid_shape))
         return ()
 
     def _propagate_tensor_dim_names(
@@ -6520,6 +6641,7 @@ class CEmitter:
             | DepthToSpaceOp
             | SpaceToDepthOp
             | ResizeOp
+            | GridSampleOp
             | ReduceOp
             | ArgReduceOp
             | ConstantOfShapeOp
@@ -6579,6 +6701,7 @@ class CEmitter:
         | DepthToSpaceOp
         | SpaceToDepthOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -6718,6 +6841,7 @@ class CEmitter:
         | ReshapeOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -6797,6 +6921,8 @@ class CEmitter:
             return op.output_shape
         if isinstance(op, ResizeOp):
             return op.output_shape
+        if isinstance(op, GridSampleOp):
+            return op.output_shape
         if isinstance(op, ReduceOp):
             return op.output_shape
         if isinstance(op, ArgReduceOp):
@@ -6845,6 +6971,7 @@ class CEmitter:
         | TransposeOp
         | ReshapeOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
