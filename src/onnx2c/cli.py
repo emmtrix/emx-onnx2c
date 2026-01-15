@@ -25,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _build_parser() -> argparse.ArgumentParser:
     description = (
-        "ONNX to C compiler "
+        "emmtrix ONNX to C Compiler "
         f"(build date: {BUILD_DATE}, git: {GIT_VERSION})"
     )
     parser = argparse.ArgumentParser(prog="onnx2c", description=description)
