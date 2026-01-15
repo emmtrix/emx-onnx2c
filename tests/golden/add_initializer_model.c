@@ -23,13 +23,6 @@
 #include <math.h>
 #include <float.h>
 
-#ifndef REF_PI_F
-#define REF_PI_F 3.14159265358979323846f
-#endif
-#ifndef REF_PI_D
-#define REF_PI_D 3.14159265358979323846
-#endif
-
 static const float weight[2][3] = {
     0.100000001f, 0.200000003f, 0.300000012f, 0.400000006f, 0.5f, 0.600000024f
 };
