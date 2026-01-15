@@ -699,24 +699,24 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_greater_uint32/model.onnx | ✅ |  |
 | node/test_greater_uint64/model.onnx | ✅ |  |
 | node/test_greater_uint8/model.onnx | ✅ |  |
-| node/test_gridsample/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_aligncorners_true/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
+| node/test_gridsample/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_aligncorners_true/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
 | node/test_gridsample_bicubic/model.onnx | ❌ | GridSample mode cubic is not supported |
 | node/test_gridsample_bicubic_align_corners_0_additional_1/model.onnx | ❌ | GridSample mode cubic is not supported |
 | node/test_gridsample_bicubic_align_corners_1_additional_1/model.onnx | ❌ | GridSample mode cubic is not supported |
-| node/test_gridsample_bilinear/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_bilinear_align_corners_0_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_bilinear_align_corners_1_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_border_padding/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_nearest/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_nearest_align_corners_0_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_nearest_align_corners_1_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_reflection_padding/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_volumetric_bilinear_align_corners_0/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_volumetric_bilinear_align_corners_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_volumetric_nearest_align_corners_0/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_volumetric_nearest_align_corners_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
-| node/test_gridsample_zeros_padding/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'function' |
+| node/test_gridsample_bilinear/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_bilinear_align_corners_0_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_bilinear_align_corners_1_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_border_padding/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_nearest/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_nearest_align_corners_0_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_nearest_align_corners_1_additional_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_reflection_padding/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_volumetric_bilinear_align_corners_0/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_volumetric_bilinear_align_corners_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_volumetric_nearest_align_corners_0/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_volumetric_nearest_align_corners_1/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
+| node/test_gridsample_zeros_padding/model.onnx | ❌ | 'GridSampleOp' object has no attribute 'output_rank' |
 | node/test_group_normalization_epsilon/model.onnx | ✅ |  |
 | node/test_group_normalization_epsilon_expanded/model.onnx | ❌ | Reshape input and output element counts must match |
 | node/test_group_normalization_example/model.onnx | ✅ |  |

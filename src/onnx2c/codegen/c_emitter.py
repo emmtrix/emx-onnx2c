@@ -994,6 +994,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -1242,6 +1243,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -1289,6 +1291,7 @@ class CEmitter:
         | SpaceToDepthOp
         | SliceOp
         | ResizeOp
+        | GridSampleOp
         | ReduceOp
         | ArgReduceOp
         | ConstantOfShapeOp
@@ -1873,6 +1876,20 @@ class CEmitter:
                 antialias=op.antialias,
                 keep_aspect_ratio_policy=op.keep_aspect_ratio_policy,
                 dtype=op.dtype,
+            )
+        if isinstance(op, GridSampleOp):
+            return GridSampleOp(
+                input0=name_map.get(op.input0, op.input0),
+                grid=name_map.get(op.grid, op.grid),
+                output=name_map.get(op.output, op.output),
+                input_shape=op.input_shape,
+                grid_shape=op.grid_shape,
+                output_shape=op.output_shape,
+                mode=op.mode,
+                padding_mode=op.padding_mode,
+                align_corners=op.align_corners,
+                dtype=op.dtype,
+                grid_dtype=op.grid_dtype,
             )
         if isinstance(op, ReduceOp):
             return ReduceOp(
