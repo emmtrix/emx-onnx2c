@@ -920,7 +920,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_max_int32/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_max_int64/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_max_int8/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
-| node/test_max_one_input/model.onnx | ❌ | Max must have at least 2 inputs and 1 output |
+| node/test_max_one_input/model.onnx | ❌ | Max must have at least 2 inputs |
 | node/test_max_two_inputs/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_max_uint16/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_max_uint32/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
@@ -948,7 +948,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_maxunpool_export_with_output_shape/model.onnx | ❌ | Unsupported op MaxUnpool |
 | node/test_maxunpool_export_without_output_shape/model.onnx | ❌ | Unsupported op MaxUnpool |
 | node/test_mean_example/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
-| node/test_mean_one_input/model.onnx | ❌ | Mean must have at least 2 inputs and 1 output |
+| node/test_mean_one_input/model.onnx | ❌ | Mean must have at least 2 inputs |
 | node/test_mean_two_inputs/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_melweightmatrix/model.onnx | ❌ | Unsupported op MelWeightMatrix |
 | node/test_min_example/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
@@ -959,7 +959,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_min_int32/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_min_int64/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_min_int8/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
-| node/test_min_one_input/model.onnx | ❌ | Min must have at least 2 inputs and 1 output |
+| node/test_min_one_input/model.onnx | ❌ | Min must have at least 2 inputs |
 | node/test_min_two_inputs/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_min_uint16/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_min_uint32/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
@@ -1581,7 +1581,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_sub_uint64/model.onnx | ✅ |  |
 | node/test_sub_uint8/model.onnx | ✅ |  |
 | node/test_sum_example/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
-| node/test_sum_one_input/model.onnx | ❌ | Sum must have at least 2 inputs and 1 output |
+| node/test_sum_one_input/model.onnx | ❌ | Sum must have at least 2 inputs |
 | node/test_sum_two_inputs/model.onnx | ❌ | 'MultiInputBinaryOp' object has no attribute 'input0' |
 | node/test_swish/model.onnx | ✅ |  |
 | node/test_swish_expanded/model.onnx | ✅ |  |

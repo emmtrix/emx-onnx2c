@@ -3209,6 +3209,7 @@ class CEmitter:
     @staticmethod
     def _build_op_call(
         op: BinaryOp
+        | MultiInputBinaryOp
         | WhereOp
         | UnaryOp
         | ClipOp
@@ -3259,6 +3260,9 @@ class CEmitter:
             args.extend(dim_order)
         if isinstance(op, BinaryOp):
             args.extend([op.input0, op.input1, op.output])
+            return ", ".join(args)
+        if isinstance(op, MultiInputBinaryOp):
+            args.extend([*op.inputs, op.output])
             return ", ".join(args)
         if isinstance(op, WhereOp):
             args.extend([op.condition, op.input_x, op.input_y, op.output])
@@ -6469,7 +6473,7 @@ class CEmitter:
         if isinstance(op, RMSNormalizationOp):
             return ((op.input0, op.shape), (op.scale, op.scale_shape))
         if isinstance(op, ClipOp):
-            return ((op.input0, op.shape),)
+            return ((op.input0, op.input_shape),)
         if isinstance(op, CastOp):
             return ((op.input0, op.shape),)
         if isinstance(op, IdentityOp):

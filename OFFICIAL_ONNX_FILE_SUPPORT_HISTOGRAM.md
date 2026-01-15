@@ -109,10 +109,10 @@
 | Graph must contain at least one node | 1 | █ |
 | Dropout mask output is not supported | 1 | █ |
 | Unsupported op MatMulInteger | 1 | █ |
-| Max must have at least 2 inputs and 1 output | 1 | █ |
-| Mean must have at least 2 inputs and 1 output | 1 | █ |
+| Max must have at least 2 inputs | 1 | █ |
+| Mean must have at least 2 inputs | 1 | █ |
 | Unsupported op MelWeightMatrix | 1 | █ |
-| Min must have at least 2 inputs and 1 output | 1 | █ |
+| Min must have at least 2 inputs | 1 | █ |
 | Unsupported op Mish | 1 | █ |
 | Unsupported op NonZero | 1 | █ |
 | Unsupported op OptionalGetElement | 1 | █ |
@@ -122,7 +122,7 @@
 | ReduceMax does not support dtype bool | 1 | █ |
 | ReduceMin does not support dtype bool | 1 | █ |
 | Max expects identical input/output shapes | 1 | █ |
-| Sum must have at least 2 inputs and 1 output | 1 | █ |
+| Sum must have at least 2 inputs | 1 | █ |
 | Unsupported op Upsample | 1 | █ |
 | Dynamic dim for tensor '*' | 1 | █ |
 
