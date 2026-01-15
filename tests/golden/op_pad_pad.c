@@ -22,10 +22,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * Weight 1:
+ * Name: pads
+ * Shape: (4,)
+ * Elements: 4
+ * Dtype: int64
+ */
 static const int64_t pads[4] = {
     0LL, 1LL, 0LL, 1LL
 };
 
+/*
+ * Weight 2:
+ * Name: value
+ * Shape: []
+ * Elements: 1
+ * Dtype: float
+ */
 static const float value[1] = {
     0.0f
 };
@@ -39,7 +53,7 @@ static const float value[1] = {
  * Attrs:
  *   mode: constant
  */
-static inline void node0_Pad(const float input[restrict 2][3], float output[restrict 2][5]) {
+static inline void node0_pad(const float input[restrict 2][3], float output[restrict 2][5]) {
     const float *input_flat = (const float *)input;
     for (size_t i0 = 0; i0 < 2; ++i0) {
         for (size_t i1 = 0; i1 < 5; ++i1) {
@@ -79,5 +93,5 @@ static inline void node0_Pad(const float input[restrict 2][3], float output[rest
 }
 
 void model(const float input[restrict 2][3], float output[restrict 2][5]) {
-    node0_Pad(input, output);
+    node0_pad(input, output);
 }

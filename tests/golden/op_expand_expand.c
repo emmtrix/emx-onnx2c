@@ -22,6 +22,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * Weight 1:
+ * Name: shape
+ * Shape: (2,)
+ * Elements: 2
+ * Dtype: int64
+ */
 static const int64_t shape[2] = {
     2LL, 3LL
 };
@@ -34,7 +41,7 @@ static const int64_t shape[2] = {
  * Outputs: output
  * Attrs: n/a
  */
-static inline void node0_Expand(const float input0[restrict 1][3], float output[restrict 2][3]) {
+static inline void node0_expand(const float input0[restrict 1][3], float output[restrict 2][3]) {
     const float *input_data = (const float *)input0;
     float *output_data = (float *)output;
     size_t output_index = 0;
@@ -48,5 +55,5 @@ static inline void node0_Expand(const float input0[restrict 1][3], float output[
 }
 
 void model(const float input[restrict 1][3], float output[restrict 2][3]) {
-    node0_Expand(input, output);
+    node0_expand(input, output);
 }

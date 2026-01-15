@@ -22,18 +22,46 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * Weight 1:
+ * Name: starts
+ * Shape: (2,)
+ * Elements: 2
+ * Dtype: int64
+ */
 static const int64_t starts[2] = {
     0LL, 1LL
 };
 
+/*
+ * Weight 2:
+ * Name: ends
+ * Shape: (2,)
+ * Elements: 2
+ * Dtype: int64
+ */
 static const int64_t ends[2] = {
     2LL, 3LL
 };
 
+/*
+ * Weight 3:
+ * Name: axes
+ * Shape: (2,)
+ * Elements: 2
+ * Dtype: int64
+ */
 static const int64_t axes[2] = {
     0LL, 2LL
 };
 
+/*
+ * Weight 4:
+ * Name: steps
+ * Shape: (2,)
+ * Elements: 2
+ * Dtype: int64
+ */
 static const int64_t steps[2] = {
     1LL, 2LL
 };
@@ -46,7 +74,7 @@ static const int64_t steps[2] = {
  * Outputs: out
  * Attrs: n/a
  */
-static inline void node0_Slice(const float input0[restrict 2][3][4], float output[restrict 2][3][1]) {
+static inline void node0_slice(const float input0[restrict 2][3][4], float output[restrict 2][3][1]) {
     for (size_t i0 = 0; i0 < 2; ++i0) {
         for (size_t i1 = 0; i1 < 3; ++i1) {
             for (size_t i2 = 0; i2 < 1; ++i2) {
@@ -57,5 +85,5 @@ static inline void node0_Slice(const float input0[restrict 2][3][4], float outpu
 }
 
 void model(const float in0[restrict 2][3][4], float out[restrict 2][3][1]) {
-    node0_Slice(in0, out);
+    node0_slice(in0, out);
 }

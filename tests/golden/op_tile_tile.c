@@ -22,6 +22,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * Weight 1:
+ * Name: repeats
+ * Shape: (2,)
+ * Elements: 2
+ * Dtype: int64
+ */
 static const int64_t repeats[2] = {
     2LL, 1LL
 };
@@ -34,7 +41,7 @@ static const int64_t repeats[2] = {
  * Outputs: output
  * Attrs: n/a
  */
-static inline void node0_Tile(const float input0[restrict 2][3], float output[restrict 4][3]) {
+static inline void node0_tile(const float input0[restrict 2][3], float output[restrict 4][3]) {
     const float *input_data = (const float *)input0;
     float *output_data = (float *)output;
     size_t output_index = 0;
@@ -48,5 +55,5 @@ static inline void node0_Tile(const float input0[restrict 2][3], float output[re
 }
 
 void model(const float input[restrict 2][3], float output[restrict 4][3]) {
-    node0_Tile(input, output);
+    node0_tile(input, output);
 }

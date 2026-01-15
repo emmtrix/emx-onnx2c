@@ -23,6 +23,13 @@
 #include <stdint.h>
 #include <math.h>
 
+/*
+ * Weight 1:
+ * Name: sizes
+ * Shape: (4,)
+ * Elements: 4
+ * Dtype: int64
+ */
 static const int64_t sizes[4] = {
     1LL, 1LL, 4LL, 4LL
 };
@@ -38,7 +45,7 @@ static const int64_t sizes[4] = {
  *   mode: nearest
  *   nearest_mode: floor
  */
-static inline void node0_Resize(const float input0[restrict 1][1][2][2], const int64_t sizes_input[restrict 4], float output[restrict 1][1][4][4]) {
+static inline void node0_resize(const float input0[restrict 1][1][2][2], const int64_t sizes_input[restrict 4], float output[restrict 1][1][4][4]) {
     const int64_t input_shape[4] = { 1, 1, 2, 2 };
     const int64_t output_shape[4] = { 1, 1, 4, 4 };
     double scales[4];
@@ -116,5 +123,5 @@ static inline void node0_Resize(const float input0[restrict 1][1][2][2], const i
 }
 
 void model(const float in0[restrict 1][1][2][2], float out[restrict 1][1][4][4]) {
-    node0_Resize(in0, sizes, out);
+    node0_resize(in0, sizes, out);
 }

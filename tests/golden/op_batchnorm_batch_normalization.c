@@ -22,18 +22,46 @@
 #include <stddef.h>
 #include <math.h>
 
+/*
+ * Weight 1:
+ * Name: scale
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
 static const float scale[3] = {
     1.0f, 1.5f, -0.5f
 };
 
+/*
+ * Weight 2:
+ * Name: bias
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
 static const float bias[3] = {
     0.0f, 0.100000001f, -0.200000003f
 };
 
+/*
+ * Weight 3:
+ * Name: mean
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
 static const float mean[3] = {
     0.5f, -0.5f, 1.0f
 };
 
+/*
+ * Weight 4:
+ * Name: var
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
 static const float var[3] = {
     0.25f, 0.5f, 1.5f
 };
@@ -47,7 +75,7 @@ static const float var[3] = {
  * Attrs:
  *   epsilon: 9.999999747378752e-06
  */
-static inline void node0_BatchNormalization(const float input0[restrict 2][3][2][2], const float scale[restrict 3], const float bias[restrict 3], const float mean[restrict 3], const float variance[restrict 3], float output[restrict 2][3][2][2]) {
+static inline void node0_batchnormalization(const float input0[restrict 2][3][2][2], const float scale[restrict 3], const float bias[restrict 3], const float mean[restrict 3], const float variance[restrict 3], float output[restrict 2][3][2][2]) {
     for (size_t i0 = 0; i0 < 2; ++i0) {
         for (size_t i1 = 0; i1 < 3; ++i1) {
             for (size_t i2 = 0; i2 < 2; ++i2) {
@@ -62,5 +90,5 @@ static inline void node0_BatchNormalization(const float input0[restrict 2][3][2]
 }
 
 void model(const float in0[restrict 2][3][2][2], float out[restrict 2][3][2][2]) {
-    node0_BatchNormalization(in0, scale, bias, mean, var, out);
+    node0_batchnormalization(in0, scale, bias, mean, var, out);
 }

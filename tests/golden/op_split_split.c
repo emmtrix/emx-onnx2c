@@ -23,6 +23,13 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Weight 1:
+ * Name: split
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: int64
+ */
 static const int64_t split[3] = {
     2LL, 2LL, 2LL
 };
@@ -36,7 +43,7 @@ static const int64_t split[3] = {
  * Attrs:
  *   axis: 1
  */
-static inline void node0_Split(const float input0[restrict 2][6], float output_0[restrict 2][2], float output_1[restrict 2][2], float output_2[restrict 2][2]) {
+static inline void node0_split(const float input0[restrict 2][6], float output_0[restrict 2][2], float output_1[restrict 2][2], float output_2[restrict 2][2]) {
     const float *input_data = (const float *)input0;
     float *output_ptrs[] = { (float *)output_0, (float *)output_1, (float *)output_2 };
     const size_t axis_sizes[] = { 2, 2, 2 };
@@ -56,5 +63,5 @@ static inline void node0_Split(const float input0[restrict 2][6], float output_0
 }
 
 void model(const float input[restrict 2][6], float output_0[restrict 2][2], float output_1[restrict 2][2], float output_2[restrict 2][2]) {
-    node0_Split(input, output_0, output_1, output_2);
+    node0_split(input, output_0, output_1, output_2);
 }

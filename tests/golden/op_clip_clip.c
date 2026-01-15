@@ -21,10 +21,24 @@
 
 #include <stddef.h>
 
+/*
+ * Weight 1:
+ * Name: min
+ * Shape: []
+ * Elements: 1
+ * Dtype: float
+ */
 static const float min[1] = {
     0.0f
 };
 
+/*
+ * Weight 2:
+ * Name: max
+ * Shape: []
+ * Elements: 1
+ * Dtype: float
+ */
 static const float max[1] = {
     6.0f
 };
@@ -37,7 +51,7 @@ static const float max[1] = {
  * Outputs: output
  * Attrs: n/a
  */
-static inline void node0_Clip(const float input0[restrict 2][3], const float input_min[restrict 1], const float input_max[restrict 1], float output[restrict 2][3]) {
+static inline void node0_clip(const float input0[restrict 2][3], const float input_min[restrict 1], const float input_max[restrict 1], float output[restrict 2][3]) {
     for (size_t i0 = 0; i0 < 2; ++i0) {
         for (size_t i1 = 0; i1 < 3; ++i1) {
             float value = input0[i0][i1];
@@ -53,5 +67,5 @@ static inline void node0_Clip(const float input0[restrict 2][3], const float inp
 }
 
 void model(const float input[restrict 2][3], float output[restrict 2][3]) {
-    node0_Clip(input, min, max, output);
+    node0_clip(input, min, max, output);
 }
