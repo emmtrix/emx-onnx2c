@@ -73,6 +73,15 @@ def _default_pad_value(dtype: ScalarType) -> float | int | bool:
     return 0
 
 
+def _compute_strides(shape: tuple[int, ...]) -> tuple[int, ...]:
+    strides: list[int] = []
+    stride = 1
+    for dim in reversed(shape):
+        strides.append(stride)
+        stride *= dim
+    return tuple(reversed(strides))
+
+
 @register_lowering("Pad")
 def lower_pad(graph: Graph, node: Node) -> PadOp:
     if not node.inputs or len(node.outputs) != 1:
@@ -92,7 +101,7 @@ def lower_pad(graph: Graph, node: Node) -> PadOp:
     mode = node.attrs.get("mode", "constant")
     if isinstance(mode, bytes):
         mode = mode.decode("utf-8")
-    if mode != "constant":
+    if mode not in {"constant", "edge", "reflect", "wrap"}:
         raise UnsupportedOpError(f"Pad mode '{mode}' is not supported")
     pads_name = optional_name(node.inputs, 1)
     pads_attr = node.attrs.get("pads")
@@ -168,7 +177,9 @@ def lower_pad(graph: Graph, node: Node) -> PadOp:
         output_shape=output_shape,
         pads_begin=tuple(int(value) for value in pads_begin),
         pads_end=tuple(int(value) for value in pads_end),
+        mode=mode,
         value=pad_value,
         dtype=output_dtype,
         input_dtype=input_dtype,
+        input_strides=_compute_strides(input_shape),
     )

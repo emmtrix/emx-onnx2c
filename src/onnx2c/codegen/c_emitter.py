@@ -639,9 +639,11 @@ class PadOp:
     output_shape: tuple[int, ...]
     pads_begin: tuple[int, ...]
     pads_end: tuple[int, ...]
+    mode: str
     value: float | int | bool
     dtype: ScalarType
     input_dtype: ScalarType
+    input_strides: tuple[int, ...]
 
 
 @dataclass(frozen=True)
@@ -1808,9 +1810,11 @@ class CEmitter:
                 output_shape=op.output_shape,
                 pads_begin=op.pads_begin,
                 pads_end=op.pads_end,
+                mode=op.mode,
                 value=op.value,
                 dtype=op.dtype,
                 input_dtype=op.input_dtype,
+                input_strides=op.input_strides,
             )
         if isinstance(op, DepthToSpaceOp):
             return DepthToSpaceOp(
@@ -4272,9 +4276,11 @@ class CEmitter:
                 output_shape=op.output_shape,
                 pads_begin=op.pads_begin,
                 pads_end=op.pads_end,
+                mode=op.mode,
                 value=op.value,
                 dtype=op.dtype,
                 input_dtype=op.input_dtype,
+                input_strides=op.input_strides,
             )
         if isinstance(op, DepthToSpaceOp):
             return DepthToSpaceOp(
@@ -5670,6 +5676,10 @@ class CEmitter:
             )
             in_loop_vars = CEmitter._loop_vars(op.input_shape)
             out_loop_vars = CEmitter._loop_vars(op.output_shape)
+            idx_vars = tuple(f"pad_idx{index}" for index in range(len(op.output_shape)))
+            reflect_vars = tuple(
+                f"pad_reflect{index}" for index in range(len(op.output_shape))
+            )
             rendered = pad_template.render(
                 model_name=model.name,
                 op_name=f"{model.name}_op{index}",
@@ -5687,7 +5697,13 @@ class CEmitter:
                 in_loop_vars=in_loop_vars,
                 out_loop_vars=out_loop_vars,
                 pad_begin=op.pads_begin,
+                input_strides=op.input_strides,
+                mode=op.mode,
                 pad_value=CEmitter._format_literal(op.dtype, op.value),
+                input0_flat="input_flat",
+                base_index="pad_index",
+                idx_vars=idx_vars,
+                reflect_vars=reflect_vars,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, DepthToSpaceOp):

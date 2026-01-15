@@ -1,6 +1,6 @@
 # Official ONNX file support
 
-Support 1091 / 1802 official ONNX files.
+Support 1094 / 1802 official ONNX files.
 
 ONNX version: 1.20.1
 
@@ -600,7 +600,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_dynamicquantizelinear_max_adjusted_expanded/model.onnx | ❌ | Unsupported op QuantizeLinear |
 | node/test_dynamicquantizelinear_min_adjusted/model.onnx | ❌ | Unsupported op DynamicQuantizeLinear |
 | node/test_dynamicquantizelinear_min_adjusted_expanded/model.onnx | ❌ | Unsupported op QuantizeLinear |
-| node/test_edge_pad/model.onnx | ❌ | Pad mode 'edge' is not supported |
+| node/test_edge_pad/model.onnx | ❌ | Pad pads input must be a constant initializer |
 | node/test_einsum_batch_diagonal/model.onnx | ❌ | Unsupported op Einsum |
 | node/test_einsum_batch_matmul/model.onnx | ❌ | Unsupported op Einsum |
 | node/test_einsum_inner_prod/model.onnx | ❌ | Unsupported op Einsum |
@@ -1244,7 +1244,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_reduce_sum_square_negative_axes_keepdims_example_expanded/model.onnx | ✅ |  |
 | node/test_reduce_sum_square_negative_axes_keepdims_random/model.onnx | ✅ |  |
 | node/test_reduce_sum_square_negative_axes_keepdims_random_expanded/model.onnx | ✅ |  |
-| node/test_reflect_pad/model.onnx | ❌ | Pad mode 'reflect' is not supported |
+| node/test_reflect_pad/model.onnx | ❌ | Pad pads input must be a constant initializer |
 | node/test_regex_full_match_basic/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'X'. |
 | node/test_regex_full_match_email_domain/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'X'. |
 | node/test_regex_full_match_empty/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'X'. |
@@ -1661,7 +1661,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | node/test_upsample_nearest/model.onnx | ❌ | Unsupported op Upsample |
 | node/test_where_example/model.onnx | ✅ |  |
 | node/test_where_long_example/model.onnx | ✅ |  |
-| node/test_wrap_pad/model.onnx | ❌ | Pad mode 'wrap' is not supported |
+| node/test_wrap_pad/model.onnx | ❌ | Pad pads input must be a constant initializer |
 | node/test_xor2d/model.onnx | ✅ |  |
 | node/test_xor3d/model.onnx | ✅ |  |
 | node/test_xor4d/model.onnx | ✅ |  |
@@ -1738,8 +1738,8 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | pytorch-converted/test_PixelShuffle/model.onnx | ✅ |  |
 | pytorch-converted/test_PoissonNLLLLoss_no_reduce/model.onnx | ✅ |  |
 | pytorch-converted/test_ReLU/model.onnx | ✅ |  |
-| pytorch-converted/test_ReflectionPad2d/model.onnx | ❌ | Pad mode 'reflect' is not supported |
-| pytorch-converted/test_ReplicationPad2d/model.onnx | ❌ | Pad mode 'edge' is not supported |
+| pytorch-converted/test_ReflectionPad2d/model.onnx | ✅ |  |
+| pytorch-converted/test_ReplicationPad2d/model.onnx | ✅ |  |
 | pytorch-converted/test_SELU/model.onnx | ✅ |  |
 | pytorch-converted/test_Sigmoid/model.onnx | ✅ |  |
 | pytorch-converted/test_Softmax/model.onnx | ✅ |  |
@@ -1772,7 +1772,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | pytorch-operator/test_operator_min/model.onnx | ✅ |  |
 | pytorch-operator/test_operator_mm/model.onnx | ✅ |  |
 | pytorch-operator/test_operator_non_float_params/model.onnx | ✅ |  |
-| pytorch-operator/test_operator_pad/model.onnx | ❌ | Pad mode 'reflect' is not supported |
+| pytorch-operator/test_operator_pad/model.onnx | ✅ |  |
 | pytorch-operator/test_operator_params/model.onnx | ✅ |  |
 | pytorch-operator/test_operator_permute2/model.onnx | ✅ |  |
 | pytorch-operator/test_operator_pow/model.onnx | ✅ |  |
@@ -1815,7 +1815,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 
 Local tests: `onnx2c-org/test/local_ops`.
 
-Support 59 / 74 local ONNX files.
+Support 63 / 74 local ONNX files.
 
 | File | Supported | Error |
 | --- | --- | --- |
@@ -1876,10 +1876,10 @@ Support 59 / 74 local ONNX files.
 | test_nodes_out_of_order/model.onnx | ✅ |  |
 | test_pad_constant_default/model.onnx | ✅ |  |
 | test_pad_constant_input/model.onnx | ✅ |  |
-| test_pad_edge/model.onnx | ❌ | Pad mode 'edge' is not supported |
-| test_pad_edge_allaxes/model.onnx | ❌ | Pad mode 'edge' is not supported |
-| test_pad_reflect_allaxes/model.onnx | ❌ | Pad mode 'reflect' is not supported |
-| test_pad_reflect_nopadding/model.onnx | ❌ | Pad mode 'reflect' is not supported |
+| test_pad_edge/model.onnx | ✅ |  |
+| test_pad_edge_allaxes/model.onnx | ✅ |  |
+| test_pad_reflect_allaxes/model.onnx | ✅ |  |
+| test_pad_reflect_nopadding/model.onnx | ✅ |  |
 | test_qlinearadd_int8/model.onnx | ❌ | Unsupported op QLinearAdd |
 | test_qlinearadd_uint8/model.onnx | ❌ | Unsupported op QLinearAdd |
 | test_qlinearmul_int8/model.onnx | ❌ | Unsupported op QLinearMul |

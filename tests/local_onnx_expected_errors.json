@@ -229,19 +229,19 @@
   ],
   [
     "test_pad_edge/model.onnx",
-    "Pad mode 'edge' is not supported"
+    ""
   ],
   [
     "test_pad_edge_allaxes/model.onnx",
-    "Pad mode 'edge' is not supported"
+    ""
   ],
   [
     "test_pad_reflect_allaxes/model.onnx",
-    "Pad mode 'reflect' is not supported"
+    ""
   ],
   [
     "test_pad_reflect_nopadding/model.onnx",
-    "Pad mode 'reflect' is not supported"
+    ""
   ],
   [
     "test_qlinearadd_int8/model.onnx",

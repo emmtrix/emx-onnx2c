@@ -2369,7 +2369,7 @@
   ],
   [
     "node/test_edge_pad/model.onnx",
-    "Pad mode 'edge' is not supported"
+    "Pad pads input must be a constant initializer"
   ],
   [
     "node/test_einsum_batch_diagonal/model.onnx",
@@ -4945,7 +4945,7 @@
   ],
   [
     "node/test_reflect_pad/model.onnx",
-    "Pad mode 'reflect' is not supported"
+    "Pad pads input must be a constant initializer"
   ],
   [
     "node/test_regex_full_match_basic/model.onnx",
@@ -6613,7 +6613,7 @@
   ],
   [
     "node/test_wrap_pad/model.onnx",
-    "Pad mode 'wrap' is not supported"
+    "Pad pads input must be a constant initializer"
   ],
   [
     "node/test_xor2d/model.onnx",
@@ -6921,11 +6921,11 @@
   ],
   [
     "pytorch-converted/test_ReflectionPad2d/model.onnx",
-    "Pad mode 'reflect' is not supported"
+    ""
   ],
   [
     "pytorch-converted/test_ReplicationPad2d/model.onnx",
-    "Pad mode 'edge' is not supported"
+    ""
   ],
   [
     "pytorch-converted/test_SELU/model.onnx",
@@ -7057,7 +7057,7 @@
   ],
   [
     "pytorch-operator/test_operator_pad/model.onnx",
-    "Pad mode 'reflect' is not supported"
+    ""
   ],
   [
     "pytorch-operator/test_operator_params/model.onnx",

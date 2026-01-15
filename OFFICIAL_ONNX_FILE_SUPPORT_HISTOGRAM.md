@@ -17,9 +17,9 @@
 | Reshape input and output element counts must match | 15 | ████████████ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 14 | ████████████ |
 | Unsupported op ConvTranspose | 14 | ████████████ |
+| Pad pads input must be a constant initializer | 13 | ███████████ |
 | '*' object has no attribute '*' | 13 | ███████████ |
 | ReduceSum output shape rank must match input rank | 12 | ██████████ |
-| Pad pads input must be a constant initializer | 10 | ████████ |
 | Output shape must be fully defined | 9 | ████████ |
 | Unsupported op CumSum | 9 | ████████ |
 | Unsupported op QuantizeLinear | 9 | ████████ |
@@ -39,7 +39,6 @@
 | Unsupported elem_type 16 (BFLOAT16) for tensor '*'. | 6 | █████ |
 | Unsupported op CenterCropPad | 6 | █████ |
 | Unsupported op DFT | 6 | █████ |
-| Pad mode '*' is not supported | 6 | █████ |
 | Unsupported op Einsum | 6 | █████ |
 | Concat output shape must be (2,), got (1,) | 6 | █████ |
 | Unsupported op ScatterElements | 6 | █████ |
@@ -137,7 +136,6 @@
 
 | Error message | Count | Histogram |
 | --- | --- | --- |
-| Pad mode '*' is not supported | 4 | ██████████████████████████████ |
 | Unsupported op ScatterND | 4 | ██████████████████████████████ |
 | Unsupported LSTM direction b'*' | 2 | ███████████████ |
 | Unsupported op QLinearAdd | 2 | ███████████████ |

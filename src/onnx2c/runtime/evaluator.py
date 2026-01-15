@@ -167,11 +167,14 @@ def _eval_pad(evaluator: Evaluator, node: Node) -> None:
     x = evaluator.values[op.input0]
     pad_value = np.array(op.value, dtype=op.dtype.np_dtype).item()
     pad_width = tuple(zip(op.pads_begin, op.pads_end))
+    pad_kwargs = {}
+    if op.mode == "constant":
+        pad_kwargs["constant_values"] = pad_value
     evaluator.values[op.output] = np.pad(
         x,
         pad_width,
-        mode="constant",
-        constant_values=pad_value,
+        mode=op.mode,
+        **pad_kwargs,
     )
 
 
