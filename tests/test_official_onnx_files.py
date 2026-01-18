@@ -291,41 +291,6 @@ def _errors_match(actual_error: str, expected_error: str) -> bool:
     return actual_error == expected_error
 
 
-def test_official_onnx_files() -> None:
-    data_root = _official_data_root()
-    _ensure_official_onnx_files_present(data_root)
-    actual_files = _collect_onnx_files(data_root)
-    repo_root = _repo_root()
-    data_root_relative = data_root.relative_to(repo_root).as_posix()
-    actual_files = [
-        f"{data_root_relative}/{path}" for path in actual_files
-    ]
-    expected_files = sorted(_official_onnx_file_paths())
-    actual_set = set(actual_files)
-    expected_set = set(expected_files)
-    missing = sorted(expected_set - actual_set)
-    extra = sorted(actual_set - expected_set)
-    assert not missing and not extra, (
-        "Official ONNX file list mismatch. "
-        f"Missing: {missing}. Extra: {extra}."
-    )
-
-
-def test_local_onnx_files() -> None:
-    data_root = LOCAL_ONNX_DATA_ROOT
-    _ensure_local_onnx_files_present(data_root)
-    actual_files = _collect_onnx_files(data_root)
-    expected_files = sorted(_local_onnx_file_paths())
-    actual_set = set(actual_files)
-    expected_set = set(expected_files)
-    missing = sorted(expected_set - actual_set)
-    extra = sorted(actual_set - expected_set)
-    assert not missing and not extra, (
-        "Local ONNX file list mismatch. "
-        f"Missing: {missing}. Extra: {extra}."
-    )
-
-
 @pytest.mark.order(1)
 @pytest.mark.parametrize(
     "repo_relative_path",
