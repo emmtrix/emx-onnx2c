@@ -66,7 +66,7 @@ Supported operators: 133 / 198
 | GRU | ❌ |
 | Gather | ✅ |
 | GatherElements | ✅ |
-| GatherND | ❌ |
+| GatherND | ✅ |
 | Gelu | ✅ |
 | Gemm | ✅ |
 | GlobalAveragePool | ✅ |
@@ -112,7 +112,7 @@ Supported operators: 133 / 198
 | Neg | ✅ |
 | NegativeLogLikelihoodLoss | ✅ |
 | NonMaxSuppression | ❌ |
-| NonZero | ❌ |
+| NonZero | ✅ |
 | Not | ✅ |
 | OneHot | ❌ |
 | OptionalGetElement | ❌ |
@@ -188,7 +188,7 @@ Supported operators: 133 / 198
 | TfIdfVectorizer | ❌ |
 | ThresholdedRelu | ✅ |
 | Tile | ❌ |
-| TopK | ❌ |
+| TopK | ✅ |
 | Transpose | ✅ |
 | Trilu | ✅ |
 | Unique | ❌ |

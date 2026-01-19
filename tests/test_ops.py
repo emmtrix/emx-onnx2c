@@ -12,7 +12,7 @@ import onnx
 import onnxruntime as ort
 import pytest
 
-from onnx import TensorProto, helper
+from onnx import TensorProto, helper, numpy_helper
 
 from shared.scalar_types import ScalarType
 
@@ -25,6 +25,7 @@ from emx_onnx_cgen.compiler import Compiler, CompilerOptions
 from emx_onnx_cgen.errors import UnsupportedOpError
 from emx_onnx_cgen.lowering.flatten import lower_flatten
 from emx_onnx_cgen.lowering.grid_sample import lower_grid_sample
+from emx_onnx_cgen.lowering.one_hot import lower_onehot
 from emx_onnx_cgen.lowering.scatter_nd import lower_scatternd
 from emx_onnx_cgen.lowering.squeeze import lower_squeeze
 from emx_onnx_cgen.lowering import variadic as _variadic  # noqa: F401
@@ -299,6 +300,62 @@ def _make_range_model(
         [],
         [output],
         initializer=[start_tensor, limit_tensor, delta_tensor],
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="onnx2c",
+        opset_imports=[helper.make_operatorsetid("", opset)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    return model
+
+
+def _make_onehot_model(
+    *,
+    indices_shape: list[int],
+    depth: int,
+    axis: int,
+    indices_dtype: int,
+    values_dtype: int,
+    off_value: float | int = 0,
+    on_value: float | int = 1,
+    opset: int = 13,
+) -> onnx.ModelProto:
+    indices_info = helper.make_tensor_value_info(
+        "indices", indices_dtype, indices_shape
+    )
+    depth_tensor = helper.make_tensor(
+        "depth",
+        TensorProto.INT64,
+        dims=[],
+        vals=[depth],
+    )
+    values_tensor = helper.make_tensor(
+        "values",
+        values_dtype,
+        dims=[2],
+        vals=[off_value, on_value],
+    )
+    axis_norm = axis
+    if axis_norm < 0:
+        axis_norm += len(indices_shape) + 1
+    output_shape = (
+        indices_shape[:axis_norm] + [depth] + indices_shape[axis_norm:]
+    )
+    output = helper.make_tensor_value_info("output", values_dtype, output_shape)
+    node = helper.make_node(
+        "OneHot",
+        inputs=["indices", "depth", "values"],
+        outputs=[output.name],
+        axis=axis,
+    )
+    graph = helper.make_graph(
+        [node],
+        "onehot_graph",
+        [indices_info],
+        [output],
+        initializer=[depth_tensor, values_tensor],
     )
     model = helper.make_model(
         graph,
@@ -1255,6 +1312,36 @@ def _make_size_model(*, input_shape: list[int], opset: int = 13) -> onnx.ModelPr
     return model
 
 
+def _make_nonzero_model(
+    *,
+    input_shape: list[int],
+    output_shape: list[int],
+    input_dtype: int,
+    opset: int = 13,
+) -> onnx.ModelProto:
+    input_info = helper.make_tensor_value_info(
+        "input", input_dtype, input_shape
+    )
+    output = helper.make_tensor_value_info(
+        "output", TensorProto.INT64, output_shape
+    )
+    node = helper.make_node("NonZero", inputs=["input"], outputs=[output.name])
+    graph = helper.make_graph(
+        [node],
+        "nonzero_graph",
+        [input_info],
+        [output],
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="onnx2c",
+        opset_imports=[helper.make_operatorsetid("", opset)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    return model
+
+
 def _make_slice_model() -> onnx.ModelProto:
     input_shape = [2, 3, 4]
     output_shape = [2, 3, 1]
@@ -1483,6 +1570,17 @@ def _arg_reduce_output_shape(
     return [dim for dim_axis, dim in enumerate(input_shape) if dim_axis != axis]
 
 
+def _topk_output_shape(
+    input_shape: list[int], axis: int, k: int
+) -> list[int]:
+    rank = len(input_shape)
+    if axis < 0:
+        axis += rank
+    output_shape = list(input_shape)
+    output_shape[axis] = k
+    return output_shape
+
+
 def _make_arg_reduce_model(
     *,
     op_type: str,
@@ -1509,6 +1607,48 @@ def _make_arg_reduce_model(
         f"{op_type.lower()}_graph",
         [input_info],
         [output],
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="onnx2c",
+        opset_imports=[helper.make_operatorsetid("", opset)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    return model
+
+
+def _make_topk_model(
+    *,
+    input_shape: list[int],
+    output_shape: list[int],
+    axis: int,
+    k: int,
+    largest: int,
+    sorted: int,
+    dtype: int,
+    opset: int = 13,
+) -> onnx.ModelProto:
+    input_info = helper.make_tensor_value_info("input", dtype, input_shape)
+    values_info = helper.make_tensor_value_info("values", dtype, output_shape)
+    indices_info = helper.make_tensor_value_info(
+        "indices", TensorProto.INT64, output_shape
+    )
+    k_init = numpy_helper.from_array(np.array([k], dtype=np.int64), name="k")
+    node = helper.make_node(
+        "TopK",
+        inputs=[input_info.name, "k"],
+        outputs=[values_info.name, indices_info.name],
+        axis=axis,
+        largest=largest,
+        sorted=sorted,
+    )
+    graph = helper.make_graph(
+        [node],
+        "topk_graph",
+        [input_info],
+        [values_info, indices_info],
+        initializer=[k_init],
     )
     model = helper.make_model(
         graph,
@@ -2059,6 +2199,68 @@ def _make_gather_model(
     return model
 
 
+def _make_gathernd_model(
+    *,
+    data_shape: list[int],
+    indices_shape: list[int],
+    batch_dims: int = 0,
+    data_dtype: int = TensorProto.FLOAT,
+    indices_dtype: int = TensorProto.INT64,
+    indices_values: np.ndarray | None = None,
+    indices_as_initializer: bool = False,
+    opset: int = 13,
+) -> onnx.ModelProto:
+    data_input = helper.make_tensor_value_info("data", data_dtype, data_shape)
+    inputs = [data_input]
+    initializers = []
+    value_infos = []
+    if indices_as_initializer:
+        if indices_values is None:
+            raise ValueError("indices_values is required for initializer inputs")
+        indices_tensor = helper.make_tensor(
+            "indices",
+            indices_dtype,
+            dims=indices_shape,
+            vals=indices_values.flatten().tolist(),
+        )
+        initializers.append(indices_tensor)
+        value_infos.append(
+            helper.make_tensor_value_info("indices", indices_dtype, indices_shape)
+        )
+    else:
+        inputs.append(
+            helper.make_tensor_value_info("indices", indices_dtype, indices_shape)
+        )
+    index_depth = indices_shape[-1]
+    output_shape = indices_shape[:-1] + data_shape[batch_dims + index_depth :]
+    output = helper.make_tensor_value_info("out", data_dtype, output_shape)
+    attrs = {}
+    if batch_dims:
+        attrs["batch_dims"] = batch_dims
+    node = helper.make_node(
+        "GatherND",
+        inputs=["data", "indices"],
+        outputs=[output.name],
+        **attrs,
+    )
+    graph = helper.make_graph(
+        [node],
+        "gathernd_graph",
+        inputs,
+        [output],
+        initializer=initializers,
+        value_info=value_infos,
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="onnx2c",
+        opset_imports=[helper.make_operatorsetid("", opset)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    return model
+
+
 def _average_pool_output_shape(
     input_shape: list[int],
     kernel_shape: list[int],
@@ -2115,6 +2317,32 @@ def _make_random_array(
     if np.issubdtype(dtype, np.signedinteger):
         return rng.integers(-5, 5, size=shape, dtype=np.int64).astype(dtype)
     raise ValueError(f"Unsupported dtype {dtype}")
+
+
+def _gathernd_numpy(
+    data: np.ndarray, indices: np.ndarray, *, batch_dims: int = 0
+) -> np.ndarray:
+    index_depth = indices.shape[-1]
+    tail_shape = data.shape[batch_dims + index_depth :]
+    output = np.empty(indices.shape[:-1] + tail_shape, dtype=data.dtype)
+    prefix_shape = indices.shape[:-1]
+    prefix_iter = np.ndindex(*prefix_shape) if prefix_shape else [()]
+    for prefix in prefix_iter:
+        raw_index = indices[prefix]
+        if index_depth == 1:
+            index_values = [int(np.asarray(raw_index).item())]
+        else:
+            index_values = [int(value) for value in raw_index]
+        for dim_index, value in enumerate(index_values):
+            if value < 0:
+                index_values[dim_index] = value + data.shape[
+                    batch_dims + dim_index
+                ]
+        data_index = list(prefix[:batch_dims]) + index_values
+        data_index.extend([slice(None)] * len(tail_shape))
+        output_index = prefix + (slice(None),) * len(tail_shape)
+        output[output_index] = data[tuple(data_index)]
+    return output
 
 
 def _run_ort_compare(model: onnx.ModelProto) -> None:
@@ -2794,6 +3022,33 @@ ARG_REDUCE_CASES = [
     },
 ]
 
+TOPK_CASES = [
+    {
+        "name": "TopKLargestAxis1",
+        "input_shape": [3, 4],
+        "axis": 1,
+        "k": 2,
+        "largest": 1,
+        "sorted": 1,
+    },
+    {
+        "name": "TopKSmallestAxis0",
+        "input_shape": [4, 3],
+        "axis": 0,
+        "k": 2,
+        "largest": 0,
+        "sorted": 1,
+    },
+    {
+        "name": "TopKNegativeAxis",
+        "input_shape": [2, 3, 4],
+        "axis": -1,
+        "k": 3,
+        "largest": 1,
+        "sorted": 1,
+    },
+]
+
 AVG_POOL_CASES = [
     {
         "name": "Kernel2Stride2",
@@ -2982,6 +3237,21 @@ def test_lower_flatten_negative_axis() -> None:
     graph = import_onnx(model)
     op = lower_flatten(graph, graph.nodes[0])
     assert op.output_shape == (6, 4)
+
+
+def test_lower_onehot_axis_normalization() -> None:
+    model = _make_onehot_model(
+        indices_shape=[2, 3],
+        depth=4,
+        axis=-1,
+        indices_dtype=TensorProto.INT64,
+        values_dtype=TensorProto.FLOAT,
+    )
+    graph = import_onnx(model)
+    op = lower_onehot(graph, graph.nodes[0])
+    assert op.axis == 2
+    assert op.output_shape == (2, 3, 4)
+    assert op.depth_dim == 4
 
 
 def test_lower_pad_dynamic_axes_input() -> None:
@@ -3180,6 +3450,23 @@ def test_arg_reduce_matches_onnxruntime(case: dict[str, object]) -> None:
     _run_ort_compare(model)
 
 
+@pytest.mark.parametrize("case", TOPK_CASES, ids=lambda case: case["name"])
+def test_topk_matches_onnxruntime(case: dict[str, object]) -> None:
+    output_shape = _topk_output_shape(
+        case["input_shape"], case["axis"], case["k"]
+    )
+    model = _make_topk_model(
+        input_shape=case["input_shape"],
+        output_shape=output_shape,
+        axis=case["axis"],
+        k=case["k"],
+        largest=case["largest"],
+        sorted=case["sorted"],
+        dtype=TensorProto.FLOAT,
+    )
+    _run_ort_compare(model)
+
+
 def test_argmax_select_last_index_matches_numpy() -> None:
     input_shape = [2, 4]
     axis = 1
@@ -3204,6 +3491,32 @@ def test_argmax_select_last_index_matches_numpy() -> None:
     expected = data.shape[axis] - 1 - np.argmax(flipped, axis=axis)
     expected = np.expand_dims(expected, axis=axis)
     np.testing.assert_array_equal(outputs["output"], expected.astype(np.int64))
+
+
+def test_topk_tiebreaker_matches_numpy() -> None:
+    input_shape = [1, 4]
+    axis = 1
+    k = 2
+    output_shape = _topk_output_shape(input_shape, axis, k)
+    model = _make_topk_model(
+        input_shape=input_shape,
+        output_shape=output_shape,
+        axis=axis,
+        k=k,
+        largest=1,
+        sorted=1,
+        dtype=TensorProto.FLOAT,
+    )
+    compiler = Compiler()
+    data = np.array([[1.0, 2.0, 2.0, 0.5]], dtype=np.float32)
+    outputs = compiler.run(model, {"input": data})
+    order = np.argsort(-data, axis=axis, kind="stable")
+    expected_indices = np.take(order, np.arange(k), axis=axis)
+    expected_values = np.take_along_axis(data, expected_indices, axis=axis)
+    np.testing.assert_allclose(outputs["values"], expected_values, rtol=1e-5, atol=1e-6)
+    np.testing.assert_array_equal(
+        outputs["indices"], expected_indices.astype(np.int64)
+    )
 
 
 def test_reduce_op_axes_input_matches_numpy() -> None:
@@ -3239,6 +3552,21 @@ def test_size_matches_onnxruntime() -> None:
     _run_ort_compare(model)
 
 
+def test_nonzero_matches_onnxruntime() -> None:
+    model = _make_nonzero_model(
+        input_shape=[2, 2],
+        output_shape=[2, 3],
+        input_dtype=TensorProto.FLOAT,
+    )
+    inputs = {"input": np.array([[1.0, 0.0], [2.0, 3.0]], dtype=np.float32)}
+    session = ort.InferenceSession(
+        model.SerializeToString(), providers=["CPUExecutionProvider"]
+    )
+    ort_output = session.run(None, inputs)[0]
+    compiled = Compiler().run(model, inputs)["output"]
+    np.testing.assert_array_equal(compiled, ort_output)
+
+
 def test_expand_matches_onnxruntime() -> None:
     model = _make_expand_model(
         input_shape=[3, 1],
@@ -3254,6 +3582,17 @@ def test_range_matches_onnxruntime() -> None:
         limit=7,
         delta=2,
         dtype=TensorProto.INT32,
+    )
+    _run_ort_compare(model)
+
+
+def test_onehot_matches_onnxruntime() -> None:
+    model = _make_onehot_model(
+        indices_shape=[2, 3],
+        depth=4,
+        axis=1,
+        indices_dtype=TensorProto.INT64,
+        values_dtype=TensorProto.FLOAT,
     )
     _run_ort_compare(model)
 
@@ -3381,6 +3720,19 @@ def test_size_run() -> None:
     np.testing.assert_array_equal(outputs["out"], expected)
 
 
+def test_nonzero_run_matches_numpy() -> None:
+    model = _make_nonzero_model(
+        input_shape=[2, 2],
+        output_shape=[2, 3],
+        input_dtype=TensorProto.FLOAT,
+    )
+    compiler = Compiler()
+    data = np.array([[1.0, 0.0], [2.0, 3.0]], dtype=np.float32)
+    outputs = compiler.run(model, {"input": data})
+    expected = np.stack(np.nonzero(data), axis=0).astype(np.int64)
+    np.testing.assert_array_equal(outputs["output"], expected)
+
+
 def test_constant_of_shape_run() -> None:
     model = _make_constant_of_shape_model()
     compiler = Compiler()
@@ -3498,6 +3850,17 @@ def test_gather_matches_onnxruntime() -> None:
         data_shape=[2, 3, 4],
         indices_shape=[2],
         axis=1,
+        indices_values=indices_values,
+        indices_as_initializer=True,
+    )
+    _run_ort_compare(model)
+
+
+def test_gathernd_matches_onnxruntime() -> None:
+    indices_values = np.array([[0, 1], [1, 0]], dtype=np.int64)
+    model = _make_gathernd_model(
+        data_shape=[2, 2, 2],
+        indices_shape=[2, 2],
         indices_values=indices_values,
         indices_as_initializer=True,
     )
@@ -3696,6 +4059,20 @@ def test_gather_run_matches_numpy() -> None:
     indices = np.array([[1], [-1]], dtype=np.int64)
     outputs = compiler.run(model, {"data": data, "indices": indices})
     expected = np.take(data, indices, axis=2)
+    np.testing.assert_allclose(outputs["out"], expected, rtol=1e-5, atol=1e-6)
+
+
+def test_gathernd_run_matches_numpy() -> None:
+    model = _make_gathernd_model(
+        data_shape=[2, 3, 4],
+        indices_shape=[2, 2, 1],
+        batch_dims=1,
+    )
+    compiler = Compiler()
+    data = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
+    indices = np.array([[[0], [2]], [[-1], [1]]], dtype=np.int64)
+    outputs = compiler.run(model, {"data": data, "indices": indices})
+    expected = _gathernd_numpy(data, indices, batch_dims=1)
     np.testing.assert_allclose(outputs["out"], expected, rtol=1e-5, atol=1e-6)
 
 
