@@ -2,7 +2,7 @@
 
 Operators are marked supported when they appear in an ONNX file with a successful verify result.
 
-Supported operators: 131 / 198
+Supported operators: 132 / 198
 
 | Operator | Supported |
 | --- | --- |
@@ -151,7 +151,7 @@ Supported operators: 131 / 198
 | Scan | ❌ |
 | Scatter | ❌ |
 | ScatterElements | ❌ |
-| ScatterND | ❌ |
+| ScatterND | ✅ |
 | Selu | ✅ |
 | SequenceAt | ❌ |
 | SequenceConstruct | ❌ |
