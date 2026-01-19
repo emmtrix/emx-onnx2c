@@ -158,8 +158,8 @@ Mismatched elements: 1 / 6 (16.7%)
 | Error message | Count | Histogram |
 | --- | --- | --- |
 | Unsupported op ScatterND | 4 | ██████████████████████████████ |
+| ONNX Runtime failed to run | 2 | ███████████████ |
 | Unsupported LSTM direction b'*' | 2 | ███████████████ |
 | Unsupported op QLinearAdd | 2 | ███████████████ |
 | Unsupported op QLinearMul | 2 | ███████████████ |
-| ONNX Runtime failed to run | 2 | ███████████████ |
 | Gemm bias input must be broadcastable to output shape, got (2,) vs (2, 4) | 1 | ████████ |
