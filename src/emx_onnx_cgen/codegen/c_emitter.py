@@ -6400,6 +6400,19 @@ class CEmitter:
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, LayerNormalizationOp):
+            acc_dtype = (
+                ScalarType.F32
+                if op.dtype in {ScalarType.F16, ScalarType.F32}
+                else op.dtype
+            )
+            acc_type = acc_dtype.c_type
+            acc_zero_literal = CEmitter._format_literal(acc_dtype, 0)
+            acc_one_literal = CEmitter._format_literal(acc_dtype, 1)
+            acc_epsilon_literal = CEmitter._format_floating(
+                op.epsilon, acc_dtype
+            )
+            acc_sqrt_fn = CEmitter._math_fn(acc_dtype, "sqrtf", "sqrt")
+            use_kahan = op.dtype in {ScalarType.F16, ScalarType.F32}
             params = self._shared_param_map(
                 [
                     ("input0", op.input0),
@@ -6509,8 +6522,12 @@ class CEmitter:
                 bias_index_vars=bias_index_vars,
                 mean_index_vars=mean_index_vars,
                 inner=op.inner,
-                epsilon_literal=CEmitter._format_floating(op.epsilon, op.dtype),
-                sqrt_fn=CEmitter._math_fn(op.dtype, "sqrtf", "sqrt"),
+                acc_type=acc_type,
+                acc_zero_literal=acc_zero_literal,
+                acc_one_literal=acc_one_literal,
+                acc_epsilon_literal=acc_epsilon_literal,
+                acc_sqrt_fn=acc_sqrt_fn,
+                use_kahan=use_kahan,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, MeanVarianceNormalizationOp):
@@ -6902,6 +6919,14 @@ class CEmitter:
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, NegativeLogLikelihoodLossOp):
+            acc_dtype = (
+                ScalarType.F64
+                if op.dtype in {ScalarType.F16, ScalarType.F32}
+                else op.dtype
+            )
+            acc_type = acc_dtype.c_type
+            acc_zero_literal = CEmitter._format_literal(acc_dtype, 0)
+            acc_one_literal = CEmitter._format_literal(acc_dtype, 1)
             params = self._shared_param_map(
                 [
                     ("input0", op.input0),
@@ -6949,9 +6974,22 @@ class CEmitter:
                 ignore_index=op.ignore_index,
                 zero_literal=zero_literal,
                 one_literal=CEmitter._format_literal(op.dtype, 1),
+                acc_type=acc_type,
+                acc_zero_literal=acc_zero_literal,
+                acc_one_literal=acc_one_literal,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, SoftmaxCrossEntropyLossOp):
+            acc_dtype = (
+                ScalarType.F64
+                if op.dtype in {ScalarType.F16, ScalarType.F32}
+                else op.dtype
+            )
+            acc_type = acc_dtype.c_type
+            acc_zero_literal = CEmitter._format_literal(acc_dtype, 0)
+            acc_one_literal = CEmitter._format_literal(acc_dtype, 1)
+            acc_exp_fn = CEmitter._math_fn(acc_dtype, "expf", "exp")
+            acc_log_fn = CEmitter._math_fn(acc_dtype, "logf", "log")
             params = self._shared_param_map(
                 [
                     ("input0", op.input0),
@@ -7018,8 +7056,11 @@ class CEmitter:
                 ignore_index=ignore_index,
                 zero_literal=zero_literal,
                 one_literal=CEmitter._format_literal(op.dtype, 1),
-                exp_fn=CEmitter._math_fn(op.dtype, "expf", "exp"),
-                log_fn=CEmitter._math_fn(op.dtype, "logf", "log"),
+                acc_type=acc_type,
+                acc_zero_literal=acc_zero_literal,
+                acc_one_literal=acc_one_literal,
+                acc_exp_fn=acc_exp_fn,
+                acc_log_fn=acc_log_fn,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, MaxPoolOp):
@@ -7936,6 +7977,8 @@ class CEmitter:
             update_expr = None
             init_literal = None
             final_expr = "acc"
+            use_kahan = False
+            kahan_value_expr = None
             fabs_fn = CEmitter._math_fn(op.dtype, "fabsf", "fabs")
             exp_fn = CEmitter._math_fn(op.dtype, "expf", "exp")
             log_fn = CEmitter._math_fn(op.dtype, "logf", "log")
@@ -7981,6 +8024,24 @@ class CEmitter:
                 raise CodegenError(
                     f"Unsupported reduce kind {op.reduce_kind}"
                 )
+            if op.dtype in {ScalarType.F16, ScalarType.F32} and op.reduce_kind in {
+                "sum",
+                "mean",
+                "logsum",
+                "logsumexp",
+                "l1",
+                "l2",
+                "sumsquare",
+            }:
+                use_kahan = True
+                if op.reduce_kind == "logsumexp":
+                    kahan_value_expr = f"{exp_fn}({value_expr})"
+                elif op.reduce_kind == "l1":
+                    kahan_value_expr = f"{fabs_fn}({value_expr})"
+                elif op.reduce_kind in {"l2", "sumsquare"}:
+                    kahan_value_expr = f"{value_expr} * {value_expr}"
+                else:
+                    kahan_value_expr = value_expr
             input_suffix = self._param_array_suffix(op.input_shape)
             output_suffix = self._param_array_suffix(op.output_shape)
             param_decls = self._build_param_decls(
@@ -8004,8 +8065,11 @@ class CEmitter:
                 reduce_dims=reduce_dims,
                 output_index_expr=output_index_expr,
                 init_literal=init_literal,
+                zero_literal=zero_literal,
                 update_expr=update_expr,
                 final_expr=final_expr,
+                use_kahan=use_kahan,
+                kahan_value_expr=kahan_value_expr,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, ArgReduceOp):
