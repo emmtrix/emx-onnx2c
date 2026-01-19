@@ -156,6 +156,7 @@ from .ops import (
     validate_unary_attrs,
 )
 from shared.scalar_functions import ScalarFunction, ScalarFunctionError
+from .runtime.evaluator import Evaluator
 
 
 @dataclass(frozen=True)
