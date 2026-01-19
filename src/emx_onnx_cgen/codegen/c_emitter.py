@@ -9425,7 +9425,7 @@ class CEmitter:
     def _codegen_shape(shape: tuple[int, ...]) -> tuple[int, ...]:
         if not shape:
             return (1,)
-        return tuple(max(1, dim) for dim in shape)
+        return tuple(max(1, dim) if isinstance(dim, int) else dim for dim in shape)
 
     @staticmethod
     def _array_suffix(shape: tuple[int, ...]) -> str:
