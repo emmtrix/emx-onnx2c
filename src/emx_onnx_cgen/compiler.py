@@ -46,6 +46,7 @@ from .codegen.c_emitter import (
     LogSoftmaxOp,
     HardmaxOp,
     NegativeLogLikelihoodLossOp,
+    NonZeroOp,
     NodeInfo,
     PadOp,
     SplitOp,
@@ -109,6 +110,7 @@ from .lowering import mean_variance_normalization as _mean_variance_normalizatio
 from .lowering.negative_log_likelihood_loss import (
     lower_negative_log_likelihood_loss,
 )
+from .lowering import nonzero as _nonzero  # noqa: F401
 from .lowering.expand import lower_expand
 from .lowering.range import lower_range
 from .lowering.split import lower_split
@@ -123,6 +125,7 @@ from .lowering.reduce import (
     REDUCE_OUTPUTS_FLOAT_ONLY,
 )
 from .lowering import arg_reduce as _arg_reduce  # noqa: F401
+from .lowering import topk as _topk  # noqa: F401
 from .lowering.reshape import lower_reshape
 from .lowering.resize import lower_resize
 from .lowering.grid_sample import lower_grid_sample
@@ -476,6 +479,7 @@ class Compiler:
             | ArgReduceOp
             | ShapeOp
             | PadOp
+            | NonZeroOp
             | ExpandOp
             | CumSumOp
             | RangeOp
@@ -525,6 +529,7 @@ class Compiler:
             | ArgReduceOp
             | ShapeOp
             | PadOp
+            | NonZeroOp
             | ExpandOp
             | CumSumOp
             | RangeOp
