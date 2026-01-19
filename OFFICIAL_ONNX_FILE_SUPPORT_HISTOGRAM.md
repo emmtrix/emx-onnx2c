@@ -18,7 +18,6 @@
 | Unsupported elem_type 25 (UINT2) for tensor '*'. | 17 | ██████ |
 | Unsupported elem_type 26 (INT2) for tensor '*'. | 17 | ██████ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 14 | █████ |
-| Out of tolerance | 13 | █████ |
 | Output shape must be fully defined | 9 | ███ |
 | Testbench execution failed: exit code -11 (signal 11: SIGSEGV) | 9 | ███ |
 | Unsupported op ImageDecoder | 9 | ███ |
@@ -41,6 +40,7 @@
 | And expects identical input/output shapes | 5 | ██ |
 | AveragePool expects 2D kernel_shape | 5 | ██ |
 | Or expects identical input/output shapes | 5 | ██ |
+| Out of tolerance | 5 | ██ |
 | Test data input count does not match model inputs: 1 vs 5. | 5 | ██ |
 | Unsupported op Col2Im | 5 | ██ |
 | Unsupported op DequantizeLinear | 5 | ██ |
