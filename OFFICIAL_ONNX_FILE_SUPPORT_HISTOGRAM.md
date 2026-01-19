@@ -28,7 +28,6 @@
 | Unsupported op Adagrad | 2 | ███ |
 | Unsupported op Adam | 2 | ███ |
 | Unsupported op TreeEnsemble | 2 | ███ |
-| Out of tolerance (max ULP 2645975) | 2 | ███ |
 | AveragePool expects 2D kernel_shape | 2 | ███ |
 | AveragePool supports ceil_mode=0 only | 2 | ███ |
 | Unsupported op DeformConv | 2 | ███ |
@@ -40,32 +39,9 @@
 | Unsupported op BlackmanWindow | 2 | ███ |
 | Unsupported op ArrayFeatureExtractor | 1 | ██ |
 | Unsupported op Binarizer | 1 | ██ |
-| Out of tolerance (max ULP 2687518) | 1 | ██ |
-| Out of tolerance (max ULP 6196633) | 1 | ██ |
-| Out of tolerance (max ULP 1996849) | 1 | ██ |
-| Out of tolerance (max ULP 2367254) | 1 | ██ |
-| Out of tolerance (max ULP 1993303) | 1 | ██ |
-| Out of tolerance (max ULP 54812) | 1 | ██ |
-| Out of tolerance (max ULP 1833014) | 1 | ██ |
-| Out of tolerance (max ULP 2557716) | 1 | ██ |
-| Out of tolerance (max ULP 79888) | 1 | ██ |
-| Out of tolerance (max ULP 2436080) | 1 | ██ |
-| Out of tolerance (max ULP 2946491) | 1 | ██ |
-| Out of tolerance (max ULP 3942617) | 1 | ██ |
 | ONNX Runtime failed to run onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_mask4d_padded_kv/model.onnx: [ONNXRuntimeError] : 1 : FAIL : /onnxruntime_src/onnxruntime/core/graph/model.cc:181 onnxruntime::Model::Model(onnx::ModelProto&&, const onnxruntime::PathString&, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList*, const onnxruntime::logging::Logger&, const onnxruntime::ModelOptions&) Unsupported model IR version: 12, max supported IR version: 11
  | 1 | ██ |
 | Pad value input must be a scalar | 1 | ██ |
-| Out of tolerance (max ULP 2304394) | 1 | ██ |
-| Out of tolerance (max ULP 2485323) | 1 | ██ |
-| Out of tolerance (max ULP 2246145) | 1 | ██ |
-| Out of tolerance (max ULP 70687) | 1 | ██ |
-| Out of tolerance (max ULP 1813037) | 1 | ██ |
-| Out of tolerance (max ULP 85177) | 1 | ██ |
-| Out of tolerance (max ULP 2077807) | 1 | ██ |
-| Out of tolerance (max ULP 9163003) | 1 | ██ |
-| Out of tolerance (max ULP 15309573) | 1 | ██ |
-| Out of tolerance (max ULP 7917190) | 1 | ██ |
-| Out of tolerance (max ULP 11061934) | 1 | ██ |
 | ONNX Runtime failed to run onnx-org/onnx/backend/test/data/node/test_cast_DOUBLE_to_FLOAT/model.onnx: [ONNXRuntimeError] : 1 : FAIL : /onnxruntime_src/onnxruntime/core/graph/model.cc:181 onnxruntime::Model::Model(onnx::ModelProto&&, const onnxruntime::PathString&, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList*, const onnxruntime::logging::Logger&, const onnxruntime::ModelOptions&) Unsupported model IR version: 13, max supported IR version: 11
  | 1 | ██ |
 | ONNX Runtime failed to run onnx-org/onnx/backend/test/data/node/test_cast_DOUBLE_to_FLOAT16/model.onnx: [ONNXRuntimeError] : 1 : FAIL : /onnxruntime_src/onnxruntime/core/graph/model.cc:181 onnxruntime::Model::Model(onnx::ModelProto&&, const onnxruntime::PathString&, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList*, const onnxruntime::logging::Logger&, const onnxruntime::ModelOptions&) Unsupported model IR version: 13, max supported IR version: 11
