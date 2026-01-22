@@ -45,6 +45,7 @@ from .codegen.c_emitter import (
     QuantizeLinearOp,
     LrnOp,
     LstmOp,
+    AdagradOp,
     LogSoftmaxOp,
     HardmaxOp,
     NegativeLogLikelihoodLossOp,
@@ -57,6 +58,7 @@ from .codegen.c_emitter import (
     LoweredModel,
     ModelHeader,
     MatMulOp,
+    QLinearMatMulOp,
     MaxPoolOp,
     ReduceOp,
     ArgReduceOp,
@@ -106,6 +108,7 @@ from .lowering.gemm import resolve_gemm_spec, validate_gemm_bias_shape
 from .lowering.lrn import LrnSpec, resolve_lrn_spec
 from .lowering.logsoftmax import lower_logsoftmax
 from .lowering import hardmax as _hardmax  # noqa: F401
+from .lowering import adagrad as _adagrad  # noqa: F401
 from .lowering import group_normalization as _group_normalization  # noqa: F401
 from .lowering import instance_normalization as _instance_normalization  # noqa: F401
 from .lowering import layer_normalization as _layer_normalization  # noqa: F401
@@ -137,6 +140,7 @@ from .lowering.reshape import lower_reshape
 from .lowering.resize import lower_resize
 from .lowering.grid_sample import lower_grid_sample
 from .lowering import quantize_linear as _quantize_linear  # noqa: F401
+from .lowering import qlinear_matmul as _qlinear_matmul  # noqa: F401
 from .lowering.slice import lower_slice
 from .lowering.squeeze import lower_squeeze
 from .lowering import depth_space as _depth_space  # noqa: F401
@@ -492,6 +496,7 @@ class Compiler:
             | ClipOp
             | CastOp
             | QuantizeLinearOp
+            | QLinearMatMulOp
             | MatMulOp
             | GemmOp
             | AttentionOp
@@ -508,6 +513,7 @@ class Compiler:
             | RMSNormalizationOp
             | LrnOp
             | LstmOp
+            | AdagradOp
             | SoftmaxOp
             | LogSoftmaxOp
             | HardmaxOp
@@ -547,6 +553,7 @@ class Compiler:
             | ClipOp
             | CastOp
             | QuantizeLinearOp
+            | QLinearMatMulOp
             | MatMulOp
             | GemmOp
             | AttentionOp

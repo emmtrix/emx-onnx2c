@@ -251,6 +251,42 @@ class MatMulOp:
     dtype: ScalarType
 
 
+@dataclass(frozen=True)
+class QLinearMatMulOp:
+    input0: str
+    input0_scale: str
+    input0_zero_point: str
+    input1: str
+    input1_scale: str
+    input1_zero_point: str
+    output_scale: str
+    output_zero_point: str
+    output: str
+    input0_shape: tuple[int, ...]
+    input1_shape: tuple[int, ...]
+    output_shape: tuple[int, ...]
+    batch_shape: tuple[int, ...]
+    input0_batch_shape: tuple[int, ...]
+    input1_batch_shape: tuple[int, ...]
+    m: int
+    n: int
+    k: int
+    left_vector: bool
+    right_vector: bool
+    input0_dtype: ScalarType
+    input1_dtype: ScalarType
+    dtype: ScalarType
+    input0_scale_dtype: ScalarType
+    input1_scale_dtype: ScalarType
+    output_scale_dtype: ScalarType
+    input0_scale_shape: tuple[int, ...]
+    input1_scale_shape: tuple[int, ...]
+    output_scale_shape: tuple[int, ...]
+    input0_zero_shape: tuple[int, ...]
+    input1_zero_shape: tuple[int, ...]
+    output_zero_shape: tuple[int, ...]
+
+
 class EinsumKind(str, Enum):
     REDUCE_ALL = "reduce_all"
     SUM_J = "sum_j"
@@ -688,6 +724,27 @@ class LstmOp:
     activation_betas: tuple[float, ...]
     dtype: ScalarType
     sequence_lens_dtype: ScalarType | None
+
+
+@dataclass(frozen=True)
+class AdagradOp:
+    rate: str
+    timestep: str
+    inputs: tuple[str, ...]
+    gradients: tuple[str, ...]
+    accumulators: tuple[str, ...]
+    outputs: tuple[str, ...]
+    accumulator_outputs: tuple[str, ...]
+    rate_shape: tuple[int, ...]
+    timestep_shape: tuple[int, ...]
+    tensor_shapes: tuple[tuple[int, ...], ...]
+    output_shapes: tuple[tuple[int, ...], ...]
+    dtype: ScalarType
+    rate_dtype: ScalarType
+    timestep_dtype: ScalarType
+    norm_coefficient: float
+    epsilon: float
+    decay_factor: float
 
 
 @dataclass(frozen=True)
@@ -1212,6 +1269,7 @@ class LoweredModel:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -1230,6 +1288,7 @@ class LoweredModel:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -1398,6 +1457,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -1414,6 +1474,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -1476,6 +1537,18 @@ class CEmitter:
                 names.append(op.zero_point)
             names.append(op.output)
             return tuple(names)
+        if isinstance(op, QLinearMatMulOp):
+            return (
+                op.input0,
+                op.input0_scale,
+                op.input0_zero_point,
+                op.input1,
+                op.input1_scale,
+                op.input1_zero_point,
+                op.output_scale,
+                op.output_zero_point,
+                op.output,
+            )
         if isinstance(op, MatMulOp):
             return (op.input0, op.input1, op.output)
         if isinstance(op, EinsumOp):
@@ -1567,6 +1640,16 @@ class CEmitter:
             if op.output_y_c is not None:
                 names.append(op.output_y_c)
             return tuple(names)
+        if isinstance(op, AdagradOp):
+            return (
+                op.rate,
+                op.timestep,
+                *op.inputs,
+                *op.gradients,
+                *op.accumulators,
+                *op.outputs,
+                *op.accumulator_outputs,
+            )
         if isinstance(op, (SoftmaxOp, LogSoftmaxOp, HardmaxOp)):
             return (op.input0, op.output)
         if isinstance(op, NegativeLogLikelihoodLossOp):
@@ -1742,6 +1825,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -1760,6 +1844,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -1806,6 +1891,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -1824,6 +1910,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -1938,6 +2025,47 @@ class CEmitter:
                 dtype=op.dtype,
                 input_dtype=op.input_dtype,
                 scale_dtype=op.scale_dtype,
+            )
+        if isinstance(op, QLinearMatMulOp):
+            return QLinearMatMulOp(
+                input0=name_map.get(op.input0, op.input0),
+                input0_scale=name_map.get(op.input0_scale, op.input0_scale),
+                input0_zero_point=name_map.get(
+                    op.input0_zero_point, op.input0_zero_point
+                ),
+                input1=name_map.get(op.input1, op.input1),
+                input1_scale=name_map.get(op.input1_scale, op.input1_scale),
+                input1_zero_point=name_map.get(
+                    op.input1_zero_point, op.input1_zero_point
+                ),
+                output_scale=name_map.get(op.output_scale, op.output_scale),
+                output_zero_point=name_map.get(
+                    op.output_zero_point, op.output_zero_point
+                ),
+                output=name_map.get(op.output, op.output),
+                input0_shape=op.input0_shape,
+                input1_shape=op.input1_shape,
+                output_shape=op.output_shape,
+                batch_shape=op.batch_shape,
+                input0_batch_shape=op.input0_batch_shape,
+                input1_batch_shape=op.input1_batch_shape,
+                m=op.m,
+                n=op.n,
+                k=op.k,
+                left_vector=op.left_vector,
+                right_vector=op.right_vector,
+                input0_dtype=op.input0_dtype,
+                input1_dtype=op.input1_dtype,
+                dtype=op.dtype,
+                input0_scale_dtype=op.input0_scale_dtype,
+                input1_scale_dtype=op.input1_scale_dtype,
+                output_scale_dtype=op.output_scale_dtype,
+                input0_scale_shape=op.input0_scale_shape,
+                input1_scale_shape=op.input1_scale_shape,
+                output_scale_shape=op.output_scale_shape,
+                input0_zero_shape=op.input0_zero_shape,
+                input1_zero_shape=op.input1_zero_shape,
+                output_zero_shape=op.output_zero_shape,
             )
         if isinstance(op, MatMulOp):
             return MatMulOp(
@@ -2286,6 +2414,33 @@ class CEmitter:
                 activation_betas=op.activation_betas,
                 dtype=op.dtype,
                 sequence_lens_dtype=op.sequence_lens_dtype,
+            )
+        if isinstance(op, AdagradOp):
+            return AdagradOp(
+                rate=name_map.get(op.rate, op.rate),
+                timestep=name_map.get(op.timestep, op.timestep),
+                inputs=tuple(name_map.get(name, name) for name in op.inputs),
+                gradients=tuple(
+                    name_map.get(name, name) for name in op.gradients
+                ),
+                accumulators=tuple(
+                    name_map.get(name, name) for name in op.accumulators
+                ),
+                outputs=tuple(name_map.get(name, name) for name in op.outputs),
+                accumulator_outputs=tuple(
+                    name_map.get(name, name)
+                    for name in op.accumulator_outputs
+                ),
+                rate_shape=op.rate_shape,
+                timestep_shape=op.timestep_shape,
+                tensor_shapes=op.tensor_shapes,
+                output_shapes=op.output_shapes,
+                dtype=op.dtype,
+                rate_dtype=op.rate_dtype,
+                timestep_dtype=op.timestep_dtype,
+                norm_coefficient=op.norm_coefficient,
+                epsilon=op.epsilon,
+                decay_factor=op.decay_factor,
             )
         if isinstance(op, SoftmaxOp):
             return SoftmaxOp(
@@ -2881,6 +3036,9 @@ class CEmitter:
                 "quantize_linear": self._env.get_template(
                     "quantize_linear_op.c.j2"
                 ),
+                "qlinear_matmul": self._env.get_template(
+                    "qlinear_matmul_op.c.j2"
+                ),
                 "matmul": self._env.get_template("matmul_op.c.j2"),
                 "einsum": self._env.get_template("einsum_op.c.j2"),
                 "gemm": self._env.get_template("gemm_op.c.j2"),
@@ -2911,6 +3069,7 @@ class CEmitter:
                 "rms_norm": self._env.get_template("rms_normalization_op.c.j2"),
                 "lrn": self._env.get_template("lrn_op.c.j2"),
                 "lstm": self._env.get_template("lstm_op.c.j2"),
+                "adagrad": self._env.get_template("adagrad_op.c.j2"),
                 "softmax": self._env.get_template("softmax_op.c.j2"),
                 "logsoftmax": self._env.get_template("logsoftmax_op.c.j2"),
                 "hardmax": self._env.get_template("hardmax_op.c.j2"),
@@ -3013,6 +3172,7 @@ class CEmitter:
         clip_template = templates["clip"]
         cast_template = templates["cast"]
         quantize_linear_template = templates["quantize_linear"]
+        qlinear_matmul_template = templates["qlinear_matmul"]
         matmul_template = templates["matmul"]
         einsum_template = templates["einsum"]
         gemm_template = templates["gemm"]
@@ -3031,6 +3191,7 @@ class CEmitter:
         rms_norm_template = templates["rms_norm"]
         lrn_template = templates["lrn"]
         lstm_template = templates["lstm"]
+        adagrad_template = templates["adagrad"]
         softmax_template = templates["softmax"]
         logsoftmax_template = templates["logsoftmax"]
         hardmax_template = templates["hardmax"]
@@ -3101,6 +3262,7 @@ class CEmitter:
                 clip_template=clip_template,
                 cast_template=cast_template,
                 quantize_linear_template=quantize_linear_template,
+                qlinear_matmul_template=qlinear_matmul_template,
                 matmul_template=matmul_template,
                 einsum_template=einsum_template,
                 gemm_template=gemm_template,
@@ -3119,6 +3281,7 @@ class CEmitter:
                 rms_norm_template=rms_norm_template,
                 lrn_template=lrn_template,
                 lstm_template=lstm_template,
+                adagrad_template=adagrad_template,
                 softmax_template=softmax_template,
                 logsoftmax_template=logsoftmax_template,
                 hardmax_template=hardmax_template,
@@ -3285,6 +3448,7 @@ class CEmitter:
         clip_template = templates["clip"]
         cast_template = templates["cast"]
         quantize_linear_template = templates["quantize_linear"]
+        qlinear_matmul_template = templates["qlinear_matmul"]
         matmul_template = templates["matmul"]
         einsum_template = templates["einsum"]
         gemm_template = templates["gemm"]
@@ -3303,6 +3467,7 @@ class CEmitter:
         rms_norm_template = templates["rms_norm"]
         lrn_template = templates["lrn"]
         lstm_template = templates["lstm"]
+        adagrad_template = templates["adagrad"]
         softmax_template = templates["softmax"]
         logsoftmax_template = templates["logsoftmax"]
         hardmax_template = templates["hardmax"]
@@ -3373,6 +3538,7 @@ class CEmitter:
                 clip_template=clip_template,
                 cast_template=cast_template,
                 quantize_linear_template=quantize_linear_template,
+                qlinear_matmul_template=qlinear_matmul_template,
                 matmul_template=matmul_template,
                 einsum_template=einsum_template,
                 gemm_template=gemm_template,
@@ -3391,6 +3557,7 @@ class CEmitter:
                 rms_norm_template=rms_norm_template,
                 lrn_template=lrn_template,
                 lstm_template=lstm_template,
+                adagrad_template=adagrad_template,
                 softmax_template=softmax_template,
                 logsoftmax_template=logsoftmax_template,
                 hardmax_template=hardmax_template,
@@ -3782,6 +3949,7 @@ class CEmitter:
             | ClipOp
             | CastOp
             | QuantizeLinearOp
+            | QLinearMatMulOp
             | MatMulOp
             | EinsumOp
             | GemmOp
@@ -3799,6 +3967,7 @@ class CEmitter:
             | RMSNormalizationOp
             | LrnOp
             | LstmOp
+            | AdagradOp
             | SoftmaxOp
             | LogSoftmaxOp
             | HardmaxOp
@@ -4016,6 +4185,7 @@ class CEmitter:
             | ClipOp
             | CastOp
             | QuantizeLinearOp
+            | QLinearMatMulOp
             | MatMulOp
             | EinsumOp
             | GemmOp
@@ -4033,6 +4203,7 @@ class CEmitter:
             | RMSNormalizationOp
             | LrnOp
             | LstmOp
+            | AdagradOp
             | SoftmaxOp
             | LogSoftmaxOp
             | HardmaxOp
@@ -4136,6 +4307,7 @@ class CEmitter:
                     RMSNormalizationOp,
                     LrnOp,
                     LstmOp,
+                    AdagradOp,
                     SoftmaxOp,
                     LogSoftmaxOp,
                     SoftmaxCrossEntropyLossOp,
@@ -4165,7 +4337,7 @@ class CEmitter:
         ):
             return True
         if any(
-            isinstance(op, (LpPoolOp, QuantizeLinearOp))
+            isinstance(op, (LpPoolOp, QuantizeLinearOp, QLinearMatMulOp))
             for op in resolved_ops
         ):
             return True
@@ -4179,6 +4351,7 @@ class CEmitter:
             | ClipOp
             | CastOp
             | QuantizeLinearOp
+            | QLinearMatMulOp
             | MatMulOp
             | EinsumOp
             | GemmOp
@@ -4259,7 +4432,8 @@ class CEmitter:
         ):
             return True
         if any(
-            isinstance(op, QuantizeLinearOp) and op.dtype.is_integer
+            isinstance(op, (QuantizeLinearOp, QLinearMatMulOp))
+            and op.dtype.is_integer
             for op in resolved_ops
         ):
             return True
@@ -4277,6 +4451,7 @@ class CEmitter:
             | ClipOp
             | CastOp
             | QuantizeLinearOp
+            | QLinearMatMulOp
             | MatMulOp
             | EinsumOp
             | GemmOp
@@ -4387,6 +4562,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -4405,6 +4581,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -4455,6 +4632,21 @@ class CEmitter:
             return ", ".join(args)
         if isinstance(op, WhereOp):
             args.extend([op.condition, op.input_x, op.input_y, op.output])
+            return ", ".join(args)
+        if isinstance(op, QLinearMatMulOp):
+            args.extend(
+                [
+                    op.input0,
+                    op.input0_scale,
+                    op.input0_zero_point,
+                    op.input1,
+                    op.input1_scale,
+                    op.input1_zero_point,
+                    op.output_scale,
+                    op.output_zero_point,
+                    op.output,
+                ]
+            )
             return ", ".join(args)
         if isinstance(op, MatMulOp):
             args.extend([op.input0, op.input1, op.output])
@@ -4574,6 +4766,19 @@ class CEmitter:
             if op.output_y_c is not None:
                 call_parts.append(op.output_y_c)
             args.extend(call_parts)
+            return ", ".join(args)
+        if isinstance(op, AdagradOp):
+            args.extend(
+                [
+                    op.rate,
+                    op.timestep,
+                    *op.inputs,
+                    *op.gradients,
+                    *op.accumulators,
+                    *op.outputs,
+                    *op.accumulator_outputs,
+                ]
+            )
             return ", ".join(args)
         if isinstance(op, (SoftmaxOp, LogSoftmaxOp, HardmaxOp)):
             args.extend([op.input0, op.output])
@@ -4778,6 +4983,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -4796,6 +5002,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -4841,6 +5048,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -4858,6 +5066,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -5007,6 +5216,47 @@ class CEmitter:
                 dtype=op.dtype,
                 input_dtype=op.input_dtype,
                 scale_dtype=op.scale_dtype,
+            )
+        if isinstance(op, QLinearMatMulOp):
+            return QLinearMatMulOp(
+                input0=temp_map.get(op.input0, op.input0),
+                input0_scale=temp_map.get(op.input0_scale, op.input0_scale),
+                input0_zero_point=temp_map.get(
+                    op.input0_zero_point, op.input0_zero_point
+                ),
+                input1=temp_map.get(op.input1, op.input1),
+                input1_scale=temp_map.get(op.input1_scale, op.input1_scale),
+                input1_zero_point=temp_map.get(
+                    op.input1_zero_point, op.input1_zero_point
+                ),
+                output_scale=temp_map.get(op.output_scale, op.output_scale),
+                output_zero_point=temp_map.get(
+                    op.output_zero_point, op.output_zero_point
+                ),
+                output=temp_map.get(op.output, op.output),
+                input0_shape=op.input0_shape,
+                input1_shape=op.input1_shape,
+                output_shape=op.output_shape,
+                batch_shape=op.batch_shape,
+                input0_batch_shape=op.input0_batch_shape,
+                input1_batch_shape=op.input1_batch_shape,
+                m=op.m,
+                n=op.n,
+                k=op.k,
+                left_vector=op.left_vector,
+                right_vector=op.right_vector,
+                input0_dtype=op.input0_dtype,
+                input1_dtype=op.input1_dtype,
+                dtype=op.dtype,
+                input0_scale_dtype=op.input0_scale_dtype,
+                input1_scale_dtype=op.input1_scale_dtype,
+                output_scale_dtype=op.output_scale_dtype,
+                input0_scale_shape=op.input0_scale_shape,
+                input1_scale_shape=op.input1_scale_shape,
+                output_scale_shape=op.output_scale_shape,
+                input0_zero_shape=op.input0_zero_shape,
+                input1_zero_shape=op.input1_zero_shape,
+                output_zero_shape=op.output_zero_shape,
             )
         if isinstance(op, GemmOp):
             return GemmOp(
@@ -5187,6 +5437,33 @@ class CEmitter:
                 activation_betas=op.activation_betas,
                 dtype=op.dtype,
                 sequence_lens_dtype=op.sequence_lens_dtype,
+            )
+        if isinstance(op, AdagradOp):
+            return AdagradOp(
+                rate=temp_map.get(op.rate, op.rate),
+                timestep=temp_map.get(op.timestep, op.timestep),
+                inputs=tuple(temp_map.get(name, name) for name in op.inputs),
+                gradients=tuple(
+                    temp_map.get(name, name) for name in op.gradients
+                ),
+                accumulators=tuple(
+                    temp_map.get(name, name) for name in op.accumulators
+                ),
+                outputs=tuple(temp_map.get(name, name) for name in op.outputs),
+                accumulator_outputs=tuple(
+                    temp_map.get(name, name)
+                    for name in op.accumulator_outputs
+                ),
+                rate_shape=op.rate_shape,
+                timestep_shape=op.timestep_shape,
+                tensor_shapes=op.tensor_shapes,
+                output_shapes=op.output_shapes,
+                dtype=op.dtype,
+                rate_dtype=op.rate_dtype,
+                timestep_dtype=op.timestep_dtype,
+                norm_coefficient=op.norm_coefficient,
+                epsilon=op.epsilon,
+                decay_factor=op.decay_factor,
             )
         if isinstance(op, ConvOp):
             return ConvOp(
@@ -5972,6 +6249,7 @@ class CEmitter:
         | ClipOp
         | CastOp
         | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -5989,6 +6267,7 @@ class CEmitter:
         | RMSNormalizationOp
         | LrnOp
         | LstmOp
+        | AdagradOp
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
@@ -6040,6 +6319,7 @@ class CEmitter:
         clip_template,
         cast_template,
         quantize_linear_template,
+        qlinear_matmul_template,
         matmul_template,
         einsum_template,
         gemm_template,
@@ -6058,6 +6338,7 @@ class CEmitter:
         rms_norm_template,
         lrn_template,
         lstm_template,
+        adagrad_template,
         softmax_template,
         logsoftmax_template,
         hardmax_template,
@@ -7800,6 +8081,117 @@ class CEmitter:
                 direction=op.direction,
                 input_forget=op.input_forget,
                 activation_functions=activation_functions,
+            ).rstrip()
+            return with_node_comment(rendered)
+        if isinstance(op, AdagradOp):
+            params = self._shared_param_map(
+                [
+                    ("rate", op.rate),
+                    ("timestep", op.timestep),
+                    *(
+                        (f"input{idx}", name)
+                        for idx, name in enumerate(op.inputs)
+                    ),
+                    *(
+                        (f"grad{idx}", name)
+                        for idx, name in enumerate(op.gradients)
+                    ),
+                    *(
+                        (f"acc{idx}", name)
+                        for idx, name in enumerate(op.accumulators)
+                    ),
+                    *(
+                        (f"output{idx}", name)
+                        for idx, name in enumerate(op.outputs)
+                    ),
+                    *(
+                        (f"acc_output{idx}", name)
+                        for idx, name in enumerate(op.accumulator_outputs)
+                    ),
+                ]
+            )
+            rate_suffix = self._param_array_suffix(
+                op.rate_shape, _dim_names_for(op.rate)
+            )
+            timestep_suffix = self._param_array_suffix(
+                op.timestep_shape, _dim_names_for(op.timestep)
+            )
+            param_specs = [
+                (params["rate"], op.rate_dtype.c_type, rate_suffix, True),
+                (
+                    params["timestep"],
+                    op.timestep_dtype.c_type,
+                    timestep_suffix,
+                    True,
+                ),
+            ]
+            tensor_specs = []
+            for idx, shape in enumerate(op.output_shapes):
+                input_suffix = self._param_array_suffix(
+                    op.tensor_shapes[idx], _dim_names_for(op.inputs[idx])
+                )
+                grad_suffix = self._param_array_suffix(
+                    op.tensor_shapes[idx], _dim_names_for(op.gradients[idx])
+                )
+                acc_suffix = self._param_array_suffix(
+                    op.tensor_shapes[idx], _dim_names_for(op.accumulators[idx])
+                )
+                output_suffix = self._param_array_suffix(
+                    op.output_shapes[idx], _dim_names_for(op.outputs[idx])
+                )
+                acc_output_suffix = self._param_array_suffix(
+                    op.output_shapes[idx],
+                    _dim_names_for(op.accumulator_outputs[idx]),
+                )
+                param_specs.extend(
+                    [
+                        (params[f"input{idx}"], c_type, input_suffix, True),
+                        (params[f"grad{idx}"], c_type, grad_suffix, True),
+                        (params[f"acc{idx}"], c_type, acc_suffix, True),
+                        (params[f"output{idx}"], c_type, output_suffix, False),
+                        (
+                            params[f"acc_output{idx}"],
+                            c_type,
+                            acc_output_suffix,
+                            False,
+                        ),
+                    ]
+                )
+                output_dim_names = _dim_names_for(op.outputs[idx])
+                shape_exprs = CEmitter._shape_dim_exprs(
+                    shape, output_dim_names
+                )
+                loop_vars = CEmitter._loop_vars(shape)
+                index_suffix = "".join(f"[{var}]" for var in loop_vars)
+                tensor_specs.append(
+                    {
+                        "shape": shape_exprs,
+                        "loop_vars": loop_vars,
+                        "input_expr": f"{params[f'input{idx}']}{index_suffix}",
+                        "grad_expr": f"{params[f'grad{idx}']}{index_suffix}",
+                        "acc_expr": f"{params[f'acc{idx}']}{index_suffix}",
+                        "output_expr": f"{params[f'output{idx}']}{index_suffix}",
+                        "acc_output_expr": f"{params[f'acc_output{idx}']}{index_suffix}",
+                    }
+                )
+            param_decls = self._build_param_decls(param_specs)
+            rendered = adagrad_template.render(
+                model_name=model.name,
+                op_name=op_name,
+                rate=params["rate"],
+                timestep=params["timestep"],
+                params=param_decls,
+                c_type=c_type,
+                one_literal=CEmitter._format_literal(op.dtype, 1),
+                decay_factor_literal=CEmitter._format_floating(
+                    op.decay_factor, op.dtype
+                ),
+                norm_coefficient_literal=CEmitter._format_floating(
+                    op.norm_coefficient, op.dtype
+                ),
+                epsilon_literal=CEmitter._format_floating(op.epsilon, op.dtype),
+                sqrt_fn=CEmitter._math_fn(op.dtype, "sqrtf", "sqrt"),
+                tensors=tensor_specs,
             ).rstrip()
             return with_node_comment(rendered)
         if isinstance(op, SoftmaxOp):
@@ -10267,6 +10659,187 @@ class CEmitter:
                 dim_args=dim_args,
             ).rstrip()
             return with_node_comment(rendered)
+        if isinstance(op, QLinearMatMulOp):
+            if scalar_registry is None:
+                raise CodegenError(
+                    "Scalar function registry is required for QLinearMatMul."
+                )
+            params = self._shared_param_map(
+                [
+                    ("input0", op.input0),
+                    ("input0_scale", op.input0_scale),
+                    ("input0_zero_point", op.input0_zero_point),
+                    ("input1", op.input1),
+                    ("input1_scale", op.input1_scale),
+                    ("input1_zero_point", op.input1_zero_point),
+                    ("output_scale", op.output_scale),
+                    ("output_zero_point", op.output_zero_point),
+                    ("output", op.output),
+                ]
+            )
+            output_shape = CEmitter._codegen_shape(op.output_shape)
+            output_loop_vars = CEmitter._loop_vars(output_shape)
+            output_index_expr = f"{params['output']}" + "".join(
+                f"[{var}]" for var in output_loop_vars
+            )
+            batch_rank = len(op.batch_shape)
+            batch_vars = output_loop_vars[:batch_rank]
+            if op.left_vector and op.right_vector:
+                row_var = None
+                col_var = None
+            elif op.left_vector:
+                row_var = None
+                col_var = output_loop_vars[-1]
+            elif op.right_vector:
+                row_var = output_loop_vars[-1]
+                col_var = None
+            else:
+                row_var = output_loop_vars[-2]
+                col_var = output_loop_vars[-1]
+            input0_index_expr, input1_index_expr = CEmitter._matmul_index_exprs(
+                op,
+                batch_vars,
+                row_var,
+                col_var,
+                batch_rank,
+                input0=params["input0"],
+                input1=params["input1"],
+            )
+            input0_suffix = self._param_array_suffix(op.input0_shape)
+            input1_suffix = self._param_array_suffix(op.input1_shape)
+            input0_scale_suffix = self._param_array_suffix(
+                op.input0_scale_shape
+            )
+            input1_scale_suffix = self._param_array_suffix(
+                op.input1_scale_shape
+            )
+            output_scale_suffix = self._param_array_suffix(
+                op.output_scale_shape
+            )
+            input0_zero_suffix = self._param_array_suffix(op.input0_zero_shape)
+            input1_zero_suffix = self._param_array_suffix(op.input1_zero_shape)
+            output_zero_suffix = self._param_array_suffix(op.output_zero_shape)
+            output_suffix = self._param_array_suffix(op.output_shape)
+            param_decls = self._build_param_decls(
+                [
+                    (
+                        params["input0"],
+                        op.input0_dtype.c_type,
+                        input0_suffix,
+                        True,
+                    ),
+                    (
+                        params["input0_scale"],
+                        op.input0_scale_dtype.c_type,
+                        input0_scale_suffix,
+                        True,
+                    ),
+                    (
+                        params["input0_zero_point"],
+                        op.input0_dtype.c_type,
+                        input0_zero_suffix,
+                        True,
+                    ),
+                    (
+                        params["input1"],
+                        op.input1_dtype.c_type,
+                        input1_suffix,
+                        True,
+                    ),
+                    (
+                        params["input1_scale"],
+                        op.input1_scale_dtype.c_type,
+                        input1_scale_suffix,
+                        True,
+                    ),
+                    (
+                        params["input1_zero_point"],
+                        op.input1_dtype.c_type,
+                        input1_zero_suffix,
+                        True,
+                    ),
+                    (
+                        params["output_scale"],
+                        op.output_scale_dtype.c_type,
+                        output_scale_suffix,
+                        True,
+                    ),
+                    (
+                        params["output_zero_point"],
+                        op.dtype.c_type,
+                        output_zero_suffix,
+                        True,
+                    ),
+                    (
+                        params["output"],
+                        op.dtype.c_type,
+                        output_suffix,
+                        False,
+                    ),
+                ]
+            )
+            compute_dtype = (
+                ScalarType.F64
+                if ScalarType.F64
+                in {
+                    op.input0_scale_dtype,
+                    op.input1_scale_dtype,
+                    op.output_scale_dtype,
+                }
+                else ScalarType.F32
+            )
+            compute_type = (
+                "double" if compute_dtype == ScalarType.F64 else "float"
+            )
+            max_fn = self._scalar_function_name(
+                ScalarFunction.MAXIMUM, compute_dtype, scalar_registry
+            )
+            min_fn = self._scalar_function_name(
+                ScalarFunction.MINIMUM, compute_dtype, scalar_registry
+            )
+            if max_fn is None or min_fn is None:
+                raise CodegenError(
+                    "Failed to resolve scalar min/max functions for QLinearMatMul."
+                )
+            round_fn = CEmitter._math_fn(
+                compute_dtype, "nearbyintf", "nearbyint"
+            )
+            scale_index = "0"
+            rendered = qlinear_matmul_template.render(
+                model_name=model.name,
+                op_name=op_name,
+                input0=params["input0"],
+                input1=params["input1"],
+                input0_scale=params["input0_scale"],
+                input0_zero_point=params["input0_zero_point"],
+                input1_scale=params["input1_scale"],
+                input1_zero_point=params["input1_zero_point"],
+                output_scale=params["output_scale"],
+                output_zero_point=params["output_zero_point"],
+                output=params["output"],
+                params=param_decls,
+                compute_type=compute_type,
+                output_c_type=op.dtype.c_type,
+                input0_index_expr=input0_index_expr,
+                input1_index_expr=input1_index_expr,
+                input0_scale_expr=f"{params['input0_scale']}[{scale_index}]",
+                input1_scale_expr=f"{params['input1_scale']}[{scale_index}]",
+                output_scale_expr=f"{params['output_scale']}[{scale_index}]",
+                input0_zero_expr=f"{params['input0_zero_point']}[{scale_index}]",
+                input1_zero_expr=f"{params['input1_zero_point']}[{scale_index}]",
+                output_zero_expr=f"{params['output_zero_point']}[{scale_index}]",
+                output_loop_vars=output_loop_vars,
+                output_loop_bounds=output_shape,
+                output_index_expr=output_index_expr,
+                k=op.k,
+                round_fn=round_fn,
+                min_literal=op.dtype.min_literal,
+                max_literal=op.dtype.max_literal,
+                min_fn=min_fn,
+                max_fn=max_fn,
+                dim_args=dim_args,
+            ).rstrip()
+            return with_node_comment(rendered)
         if isinstance(op, ClipOp):
             if scalar_registry is None:
                 raise CodegenError(
@@ -10893,6 +11466,18 @@ class CEmitter:
                     )
                 )
             return tuple(outputs)
+        if isinstance(op, AdagradOp):
+            outputs = [
+                (name, shape, op.dtype)
+                for name, shape in zip(op.outputs, op.output_shapes)
+            ]
+            outputs.extend(
+                (name, shape, op.dtype)
+                for name, shape in zip(
+                    op.accumulator_outputs, op.output_shapes
+                )
+            )
+            return tuple(outputs)
         if isinstance(op, SoftmaxCrossEntropyLossOp):
             outputs = [(op.output, op.output_shape, op.dtype)]
             if op.log_prob is not None and op.log_prob_shape is not None:
@@ -10948,6 +11533,8 @@ class CEmitter:
         | UnaryOp
         | ClipOp
         | CastOp
+        | QuantizeLinearOp
+        | QLinearMatMulOp
         | MatMulOp
         | EinsumOp
         | GemmOp
@@ -11011,6 +11598,8 @@ class CEmitter:
             return op.input_shape
         if isinstance(op, CastOp):
             return op.shape
+        if isinstance(op, QLinearMatMulOp):
+            return op.output_shape
         if isinstance(op, MatMulOp):
             return op.output_shape
         if isinstance(op, EinsumOp):
@@ -11144,6 +11733,7 @@ class CEmitter:
         | SoftmaxOp
         | LogSoftmaxOp
         | HardmaxOp
+        | AdagradOp
         | NegativeLogLikelihoodLossOp
         | SoftmaxCrossEntropyLossOp
         | MaxPoolOp

@@ -10,6 +10,7 @@ from ..errors import ShapeInferenceError, UnsupportedOpError
 from ..ir.model import Graph, Node
 from ..lowering.attention import resolve_attention_spec
 from ..lowering.average_pool import lower_average_pool, lower_global_average_pool
+from ..lowering.adagrad import lower_adagrad
 from ..lowering.batch_normalization import lower_batch_normalization
 from ..lowering.concat import lower_concat
 from ..lowering.constant_of_shape import lower_constant_of_shape
@@ -50,6 +51,7 @@ from ..lowering.topk import lower_topk
 from ..lowering.lstm import ACTIVATION_KIND_BY_NAME, resolve_lstm_spec
 from ..lowering.lrn import resolve_lrn_spec
 from ..lowering.matmul import lower_matmul
+from ..lowering.qlinear_matmul import lower_qlinear_matmul
 from ..lowering.maxpool import resolve_maxpool_spec
 from ..lowering.reduce import (
     REDUCE_KIND_BY_OP,
@@ -159,6 +161,37 @@ def _eval_einsum(evaluator: Evaluator, node: Node) -> None:
     )
     inputs = [evaluator.values[name] for name in node.inputs]
     evaluator.values[node.outputs[0]] = np.einsum(equation, *inputs)
+
+
+@register_evaluator("Adagrad")
+def _eval_adagrad(evaluator: Evaluator, node: Node) -> None:
+    op = lower_adagrad(evaluator.graph, node)
+    rate = evaluator.values[op.rate]
+    timestep = evaluator.values[op.timestep]
+    rate_value = (
+        np.array(rate, dtype=op.dtype.np_dtype).reshape(-1)[0].item()
+    )
+    timestep_value = (
+        np.array(timestep, dtype=np.int64).reshape(-1)[0].item()
+    )
+    r = op.dtype.np_dtype.type(
+        rate_value / (1.0 + float(timestep_value) * op.decay_factor)
+    )
+    for x_name, g_name, h_name, out_name, h_out_name in zip(
+        op.inputs,
+        op.gradients,
+        op.accumulators,
+        op.outputs,
+        op.accumulator_outputs,
+    ):
+        x = evaluator.values[x_name]
+        g = evaluator.values[g_name]
+        h = evaluator.values[h_name]
+        g_regularized = op.norm_coefficient * x + g
+        h_new = h + g_regularized * g_regularized
+        h_adaptive = np.sqrt(h_new) + op.epsilon
+        evaluator.values[out_name] = x - r * g_regularized / h_adaptive
+        evaluator.values[h_out_name] = h_new
 
 
 @register_evaluator("Clip")
@@ -1623,6 +1656,41 @@ def _eval_quantize_linear(evaluator: Evaluator, node: Node) -> None:
     evaluator.values[node.outputs[0]] = clipped.astype(
         spec.output_dtype.np_dtype, copy=False
     )
+
+
+@register_evaluator("QLinearMatMul")
+def _eval_qlinear_matmul(evaluator: Evaluator, node: Node) -> None:
+    op = lower_qlinear_matmul(evaluator.graph, node)
+    input0 = evaluator.values[op.input0]
+    input1 = evaluator.values[op.input1]
+    input0_scale = evaluator.values[op.input0_scale]
+    input1_scale = evaluator.values[op.input1_scale]
+    output_scale = evaluator.values[op.output_scale]
+    input0_zero_point = evaluator.values[op.input0_zero_point]
+    input1_zero_point = evaluator.values[op.input1_zero_point]
+    output_zero_point = evaluator.values[op.output_zero_point]
+
+    def _scalar_value(array: np.ndarray) -> float:
+        return float(np.asarray(array).reshape(-1)[0])
+
+    def _scalar_int(array: np.ndarray) -> int:
+        return int(np.asarray(array).reshape(-1)[0])
+
+    input0_zero = _scalar_int(input0_zero_point)
+    input1_zero = _scalar_int(input1_zero_point)
+    output_zero = _scalar_int(output_zero_point)
+    scale = _scalar_value(input0_scale) * _scalar_value(
+        input1_scale
+    ) / _scalar_value(output_scale)
+    acc = _apply_matmul(
+        input0.astype(np.int32) - input0_zero,
+        input1.astype(np.int32) - input1_zero,
+    )
+    scaled = acc.astype(np.float64) * scale + output_zero
+    rounded = np.rint(scaled)
+    info = np.iinfo(op.dtype.np_dtype)
+    clipped = np.clip(rounded, info.min, info.max)
+    evaluator.values[op.output] = clipped.astype(op.dtype.np_dtype)
 
 @register_evaluator("InstanceNormalization")
 def _eval_instance_normalization(evaluator: Evaluator, node: Node) -> None:
