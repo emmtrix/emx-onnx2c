@@ -34,7 +34,9 @@ def load_failing_entries() -> list[dict[str, str]]:
         json_path = _expected_errors_path_for_repo_relative(repo_relative)
         reproduction_cmd = ""
         if expectation.command_line:
-            reproduction_cmd = f"python -m emx_onnx_cgen.cli {expectation.command_line}"
+            reproduction_cmd = (
+                f"PYTHONPATH=src python -m emx_onnx_cgen.cli {expectation.command_line}"
+            )
         entries.append(
             {
                 "json_path": str(json_path),
