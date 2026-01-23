@@ -41,6 +41,7 @@
 | Xor expects identical input/output shapes | 5 | ████ |
 | Missing output 3 in testbench data | 4 | ███ |
 | Sum expects identical input/output shapes | 4 | ███ |
+| UnaryOp expects output dtype float, got bool | 4 | ███ |
 | Unsupported elem_type 24 (FLOAT8E8M0) for tensor '*'. | 4 | ███ |
 | Unsupported op AffineGrid | 4 | ███ |
 | Unsupported op Compress | 4 | ███ |
@@ -87,6 +88,7 @@ Max relative difference among violations: 5.4
 | Test data input count does not match model inputs: 3 vs 5. | 2 | ██ |
 | ThresholdedRelu only supports alpha=1.0 | 2 | ██ |
 | Tile repeats input must be a constant initializer | 2 | ██ |
+| UnaryOp expects output dtype float16, got bool | 2 | ██ |
 | Unsupported op Adam | 2 | ██ |
 | Unsupported op BitwiseNot | 2 | ██ |
 | Unsupported op BlackmanWindow | 2 | ██ |

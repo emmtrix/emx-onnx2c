@@ -1,5 +1,5 @@
 {
-  "error": "OK (max ULP 0)",
+  "error": "UnaryOp expects output dtype float, got bool",
   "command_line": "verify onnx-org/onnx/backend/test/data/node/test_isinf_negative/model.onnx --template-dir templates --cc /usr/bin/cc --test-data-dir onnx-org/onnx/backend/test/data/node/test_isinf_negative/test_data_set_0",
   "operators": [
     "IsInf"

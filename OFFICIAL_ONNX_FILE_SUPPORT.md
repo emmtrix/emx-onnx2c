@@ -1,6 +1,6 @@
 # Official ONNX file support
 
-Support 1161 / 1802 official ONNX files.
+Support 1155 / 1802 official ONNX files.
 
 ONNX version: 1.20.1
 
@@ -765,12 +765,12 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/node/test_image_decoder_decode_webp_rgb/model.onnx | ❌ | Unsupported op ImageDecoder |
 | onnx-org/onnx/backend/test/data/node/test_instancenorm_epsilon/model.onnx | ✅ | OK (max ULP 64) |
 | onnx-org/onnx/backend/test/data/node/test_instancenorm_example/model.onnx | ✅ | OK (max ULP 2) |
-| onnx-org/onnx/backend/test/data/node/test_isinf/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/node/test_isinf_float16/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/node/test_isinf_negative/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/node/test_isinf_positive/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/node/test_isnan/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/node/test_isnan_float16/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_isinf/model.onnx | ❌ | UnaryOp expects output dtype float, got bool |
+| onnx-org/onnx/backend/test/data/node/test_isinf_float16/model.onnx | ❌ | UnaryOp expects output dtype float16, got bool |
+| onnx-org/onnx/backend/test/data/node/test_isinf_negative/model.onnx | ❌ | UnaryOp expects output dtype float, got bool |
+| onnx-org/onnx/backend/test/data/node/test_isinf_positive/model.onnx | ❌ | UnaryOp expects output dtype float, got bool |
+| onnx-org/onnx/backend/test/data/node/test_isnan/model.onnx | ❌ | UnaryOp expects output dtype float, got bool |
+| onnx-org/onnx/backend/test/data/node/test_isnan_float16/model.onnx | ❌ | UnaryOp expects output dtype float16, got bool |
 | onnx-org/onnx/backend/test/data/node/test_l1normalization_axis_0/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/node/test_l1normalization_axis_1/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/node/test_l1normalization_axis_last/model.onnx | ✅ | OK (max ULP 0) |

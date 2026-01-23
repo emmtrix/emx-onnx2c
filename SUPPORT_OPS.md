@@ -2,7 +2,7 @@
 
 Operators are marked supported when they appear in an ONNX file with a successful verify result.
 
-Supported operators: 139 / 196
+Supported operators: 137 / 196
 
 | Operator | Supported |
 | --- | --- |
@@ -84,8 +84,8 @@ Supported operators: 139 / 196
 | If | ❌ |
 | ImageDecoder | ❌ |
 | InstanceNormalization | ✅ |
-| IsInf | ✅ |
-| IsNaN | ✅ |
+| IsInf | ❌ |
+| IsNaN | ❌ |
 | LRN | ✅ |
 | LSTM | ✅ |
 | LayerNormalization | ✅ |
