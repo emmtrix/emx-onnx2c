@@ -89,6 +89,12 @@ def main() -> None:
         "capture tie-break rules, optional input defaults, and output ordering so "
         "codegen/runtime match the backend tests."
     )
+    prompt_lines.append(
+        "Broadcasting hint: variadic/elementwise ops often follow ONNX "
+        "broadcasting rules, so confirm shape inference, evaluator, and codegen "
+        "all agree (e.g., multi-input emitters should use broadcast-aware "
+        "indexing and per-input array suffixes)."
+    )
     prompt_lines.append("\nAnalyze the root cause and implement a fix.")
     prompt_lines.append(
         "At the end, reflect on what general information would have helped you fix "
