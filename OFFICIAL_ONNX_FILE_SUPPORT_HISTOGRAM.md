@@ -31,7 +31,6 @@
 | Unsupported op ScatterElements | 6 | █████ |
 | Unsupported op Unique | 6 | █████ |
 | And expects identical input/output shapes | 5 | ████ |
-| AveragePool expects 2D kernel_shape | 5 | ████ |
 | Iteration of zero-sized operands is not enabled | 5 | ████ |
 | Or expects identical input/output shapes | 5 | ████ |
 | Unsupported op Col2Im | 5 | ████ |
@@ -166,6 +165,8 @@ Max relative difference among violations: 0.10344828
 | Unsupported op OptionalGetElement | 1 | █ |
 | Unsupported op QLinearConv | 1 | █ |
 | Unsupported op Upsample | 1 | █ |
+| onnxruntime failed to run onnx-org/onnx/backend/test/data/node/test_adagrad/model.onnx: [ONNXRuntimeError] : 1 : FAIL : Fatal error: ai.onnx.preview.training:Adagrad(-1) is not a registered function/op | 1 | █ |
+| onnxruntime failed to run onnx-org/onnx/backend/test/data/node/test_adagrad_multiple/model.onnx: [ONNXRuntimeError] : 1 : FAIL : Fatal error: ai.onnx.preview.training:Adagrad(-1) is not a registered function/op | 1 | █ |
 
 ## Local ONNX file support histogram
 
@@ -176,7 +177,6 @@ Max relative difference among violations: 0.10344828
 | Out of tolerance | 2 | ██████████████████████████████ |
 | Unsupported LSTM direction b'*' | 2 | ██████████████████████████████ |
 | Unsupported op QLinearAdd | 2 | ██████████████████████████████ |
-| Unsupported op QLinearMul | 2 | ██████████████████████████████ |
 | 
 Arrays are not equal
 

@@ -74,6 +74,11 @@ def main() -> None:
         "and onnx-org/onnx/backend/test/case/node for test inputs."
     )
     prompt_lines.append(
+        "Local ops hint: for com.microsoft operators or local test cases, "
+        "check onnx2c-org/test/local_ops for the model generator and "
+        "onnx2c-org/src/nodes for a reference implementation."
+    )
+    prompt_lines.append(
         "Implementation map: add/adjust lowering in src/emx_onnx_cgen/lowering/, "
         "wire codegen in src/emx_onnx_cgen/codegen/c_emitter.py with a matching "
         "templates/*_op.c.j2 file, update runtime/evaluator.py for numpy checks, "
@@ -94,6 +99,11 @@ def main() -> None:
         "Operator behavior hint: consult the ONNX reference op implementation to "
         "capture tie-break rules, optional input defaults, and output ordering so "
         "codegen/runtime match the backend tests."
+    )
+    prompt_lines.append(
+        "Implementation hint: if the failing op is a spatial operator, look for an "
+        "existing spatial_rank-aware implementation (e.g., MaxPool) to mirror how "
+        "it handles shape validation, output shape math, and templated loops."
     )
     prompt_lines.append("\nAnalyze the root cause and implement a fix.")
     prompt_lines.append(
