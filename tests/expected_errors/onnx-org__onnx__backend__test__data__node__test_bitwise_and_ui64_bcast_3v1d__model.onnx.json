@@ -4,5 +4,6 @@
   "operators": [
     "BitwiseAnd"
   ],
-  "opset_version": 18
+  "opset_version": 18,
+  "generated_checksum": "f99cd26daea3701912db00f29f5e23ba7661547b14f517c26c98b80bd2e346bb"
 }
