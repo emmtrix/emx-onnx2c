@@ -41,7 +41,16 @@
  * Elements: 6
  * Dtype: float
  */
-static const EMX_UNUSED float weight1_weight[2][3] = {
+extern const float weight1_weight[2][3];
+
+/*
+ * Weight 1:
+ * Name: weight1_weight
+ * Shape: (2, 3)
+ * Elements: 6
+ * Dtype: float
+ */
+const EMX_UNUSED float weight1_weight[2][3] = {
     {
         0x1.99999ap-4f, 0x1.99999ap-3f, 0x1.333334p-2f
     },

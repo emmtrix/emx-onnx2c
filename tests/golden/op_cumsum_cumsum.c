@@ -39,7 +39,16 @@
  * Elements: 1
  * Dtype: int64
  */
-static const EMX_UNUSED int64_t weight1_axis[1] = {
+extern const int64_t weight1_axis[1];
+
+/*
+ * Weight 1:
+ * Name: weight1_axis
+ * Shape: []
+ * Elements: 1
+ * Dtype: int64
+ */
+const EMX_UNUSED int64_t weight1_axis[1] = {
     1LL
 };
 

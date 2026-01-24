@@ -42,7 +42,16 @@
  * Elements: 6
  * Dtype: float
  */
-static float weight1_weight_large[2][3];
+extern float weight1_weight_large[2][3];
+
+/*
+ * Weight 1:
+ * Name: weight1_weight_large
+ * Shape: (2, 3)
+ * Elements: 6
+ * Dtype: float
+ */
+float weight1_weight_large[2][3];
 
 static inline float ref_scalar_f32_add(float a, float b) {
     return a + b;

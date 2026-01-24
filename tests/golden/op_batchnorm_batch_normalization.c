@@ -40,7 +40,40 @@
  * Elements: 3
  * Dtype: float
  */
-static const EMX_UNUSED float weight1_scale[3] = {
+extern const float weight1_scale[3];
+/*
+ * Weight 2:
+ * Name: weight2_bias
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
+extern const float weight2_bias[3];
+/*
+ * Weight 3:
+ * Name: weight3_mean
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
+extern const float weight3_mean[3];
+/*
+ * Weight 4:
+ * Name: weight4_var
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
+extern const float weight4_var[3];
+
+/*
+ * Weight 1:
+ * Name: weight1_scale
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: float
+ */
+const EMX_UNUSED float weight1_scale[3] = {
     0x1.000000p+0f, 0x1.800000p+0f, -0x1.000000p-1f
 };
 
@@ -51,7 +84,7 @@ static const EMX_UNUSED float weight1_scale[3] = {
  * Elements: 3
  * Dtype: float
  */
-static const EMX_UNUSED float weight2_bias[3] = {
+const EMX_UNUSED float weight2_bias[3] = {
     0x0.0p+0f, 0x1.99999ap-4f, -0x1.99999ap-3f
 };
 
@@ -62,7 +95,7 @@ static const EMX_UNUSED float weight2_bias[3] = {
  * Elements: 3
  * Dtype: float
  */
-static const EMX_UNUSED float weight3_mean[3] = {
+const EMX_UNUSED float weight3_mean[3] = {
     0x1.000000p-1f, -0x1.000000p-1f, 0x1.000000p+0f
 };
 
@@ -73,7 +106,7 @@ static const EMX_UNUSED float weight3_mean[3] = {
  * Elements: 3
  * Dtype: float
  */
-static const EMX_UNUSED float weight4_var[3] = {
+const EMX_UNUSED float weight4_var[3] = {
     0x1.000000p-2f, 0x1.000000p-1f, 0x1.800000p+0f
 };
 

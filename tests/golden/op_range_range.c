@@ -39,7 +39,32 @@
  * Elements: 1
  * Dtype: int64
  */
-static const EMX_UNUSED int64_t weight1_start[1] = {
+extern const int64_t weight1_start[1];
+/*
+ * Weight 2:
+ * Name: weight2_limit
+ * Shape: []
+ * Elements: 1
+ * Dtype: int64
+ */
+extern const int64_t weight2_limit[1];
+/*
+ * Weight 3:
+ * Name: weight3_delta
+ * Shape: []
+ * Elements: 1
+ * Dtype: int64
+ */
+extern const int64_t weight3_delta[1];
+
+/*
+ * Weight 1:
+ * Name: weight1_start
+ * Shape: []
+ * Elements: 1
+ * Dtype: int64
+ */
+const EMX_UNUSED int64_t weight1_start[1] = {
     0LL
 };
 
@@ -50,7 +75,7 @@ static const EMX_UNUSED int64_t weight1_start[1] = {
  * Elements: 1
  * Dtype: int64
  */
-static const EMX_UNUSED int64_t weight2_limit[1] = {
+const EMX_UNUSED int64_t weight2_limit[1] = {
     4LL
 };
 
@@ -61,7 +86,7 @@ static const EMX_UNUSED int64_t weight2_limit[1] = {
  * Elements: 1
  * Dtype: int64
  */
-static const EMX_UNUSED int64_t weight3_delta[1] = {
+const EMX_UNUSED int64_t weight3_delta[1] = {
     1LL
 };
 

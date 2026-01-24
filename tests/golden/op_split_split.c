@@ -40,7 +40,16 @@
  * Elements: 3
  * Dtype: int64
  */
-static const EMX_UNUSED int64_t weight1_split[3] = {
+extern const int64_t weight1_split[3];
+
+/*
+ * Weight 1:
+ * Name: weight1_split
+ * Shape: (3,)
+ * Elements: 3
+ * Dtype: int64
+ */
+const EMX_UNUSED int64_t weight1_split[3] = {
     2LL, 2LL, 2LL
 };
 
