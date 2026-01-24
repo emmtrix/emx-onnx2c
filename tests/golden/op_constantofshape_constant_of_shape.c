@@ -32,13 +32,6 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_shape
- * Shape: (3,)
- * Elements: 3
- * Dtype: int64
- */
 extern const int64_t weight1_shape[3];
 
 /*

@@ -35,13 +35,6 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_weight_large
- * Shape: (2, 3)
- * Elements: 6
- * Dtype: float
- */
 extern float weight1_weight_large[2][3];
 
 /*

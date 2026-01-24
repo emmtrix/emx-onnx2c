@@ -32,21 +32,7 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_weight
- * Shape: (1, 1, 3, 3)
- * Elements: 9
- * Dtype: float
- */
 extern const float weight1_weight[1][1][3][3];
-/*
- * Weight 2:
- * Name: weight2_bias
- * Shape: (1,)
- * Elements: 1
- * Dtype: float
- */
 extern const float weight2_bias[1];
 
 /*

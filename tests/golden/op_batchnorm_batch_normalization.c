@@ -33,37 +33,9 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_scale
- * Shape: (3,)
- * Elements: 3
- * Dtype: float
- */
 extern const float weight1_scale[3];
-/*
- * Weight 2:
- * Name: weight2_bias
- * Shape: (3,)
- * Elements: 3
- * Dtype: float
- */
 extern const float weight2_bias[3];
-/*
- * Weight 3:
- * Name: weight3_mean
- * Shape: (3,)
- * Elements: 3
- * Dtype: float
- */
 extern const float weight3_mean[3];
-/*
- * Weight 4:
- * Name: weight4_var
- * Shape: (3,)
- * Elements: 3
- * Dtype: float
- */
 extern const float weight4_var[3];
 
 /*

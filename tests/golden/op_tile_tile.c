@@ -32,13 +32,6 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_repeats
- * Shape: (2,)
- * Elements: 2
- * Dtype: int64
- */
 extern const int64_t weight1_repeats[2];
 
 /*

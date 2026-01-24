@@ -11573,7 +11573,6 @@ class CEmitter:
             return ""
         lines = []
         for index, const in enumerate(constants, start=1):
-            lines.append(self._emit_constant_comment(const, index))
             c_type = const.dtype.c_type
             array_suffix = self._array_suffix(const.shape)
             lines.append(f"extern const {c_type} {const.name}{array_suffix};")
@@ -11586,7 +11585,6 @@ class CEmitter:
             return ""
         lines = []
         for index, const in enumerate(constants, start=1):
-            lines.append(self._emit_constant_comment(const, index))
             c_type = const.dtype.c_type
             array_suffix = self._array_suffix(const.shape)
             lines.append(f"extern {c_type} {const.name}{array_suffix};")

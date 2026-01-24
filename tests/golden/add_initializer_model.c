@@ -34,13 +34,6 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_weight
- * Shape: (2, 3)
- * Elements: 6
- * Dtype: float
- */
 extern const float weight1_weight[2][3];
 
 /*

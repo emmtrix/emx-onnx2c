@@ -32,29 +32,8 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_start
- * Shape: []
- * Elements: 1
- * Dtype: int64
- */
 extern const int64_t weight1_start[1];
-/*
- * Weight 2:
- * Name: weight2_limit
- * Shape: []
- * Elements: 1
- * Dtype: int64
- */
 extern const int64_t weight2_limit[1];
-/*
- * Weight 3:
- * Name: weight3_delta
- * Shape: []
- * Elements: 1
- * Dtype: int64
- */
 extern const int64_t weight3_delta[1];
 
 /*

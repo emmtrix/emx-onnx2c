@@ -34,21 +34,7 @@
 #endif
 #endif
 
-/*
- * Weight 1:
- * Name: weight1_min
- * Shape: []
- * Elements: 1
- * Dtype: float
- */
 extern const float weight1_min[1];
-/*
- * Weight 2:
- * Name: weight2_max
- * Shape: []
- * Elements: 1
- * Dtype: float
- */
 extern const float weight2_max[1];
 
 /*
