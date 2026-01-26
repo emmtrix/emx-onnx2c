@@ -1,9 +1,6 @@
 # Official ONNX file support
 
-Support 1301 / 1802 official ONNX files.
-Support 1300 / 1802 official ONNX files.
-Support 1306 / 1802 official ONNX files.
-Support 1302 / 1802 official ONNX files.
+Support 1324 / 1802 official ONNX files.
 
 ONNX version: 1.20.1
 
