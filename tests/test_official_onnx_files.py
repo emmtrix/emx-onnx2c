@@ -5,7 +5,7 @@ import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import pytest
 
@@ -18,6 +18,7 @@ LOCAL_ONNX_DATA_ROOT = (
     Path(__file__).resolve().parents[1] / "onnx2c-org" / "test" / "local_ops"
 )
 ONNX_FILE_LIMIT = 5000
+_VERBOSE_FLAGS_REPORTED = False
 
 
 @dataclass(frozen=True)
@@ -321,7 +322,9 @@ def _run_expected_error_test(
     model_path: Path,
     expectation: OnnxFileExpectation,
     expectation_path: str,
+    request: Any | None = None,
 ) -> None:
+    global _VERBOSE_FLAGS_REPORTED
     expected_error = expectation.error
     test_data_dir = _find_test_data_dir(model_path)
     verify_args = [
@@ -350,6 +353,23 @@ def _run_expected_error_test(
         actual_error = cli_result.result or "ERROR UNKNOWN"
     else:
         actual_error = cli_result.result or "OK UNKNOWN"
+
+    if request is not None and request.config.getoption("verbose") > 0:
+        reporter = request.config.pluginmanager.getplugin("terminalreporter")
+        if reporter is not None:
+            if not _VERBOSE_FLAGS_REPORTED:
+                update_refs = os.getenv("UPDATE_REFS", "").strip() or "0"
+                disable_checksum = (
+                    os.getenv("DISABLE_CHECKSUM", "").strip() or "0"
+                )
+                reporter.write_line(
+                    "env: UPDATE_REFS="
+                    f"{update_refs} DISABLE_CHECKSUM={disable_checksum}"
+                )
+                _VERBOSE_FLAGS_REPORTED = True
+            reporter.write_line(
+                f"{expectation_path}: result={actual_error}"
+            )
 
     if actual_error == "CHECKSUM":
         actual_error = expected_error
@@ -383,6 +403,7 @@ def _run_expected_error_test(
 )
 def test_official_onnx_expected_errors(
     repo_relative_path: str,
+    request: Any,
 ) -> None:
     data_root = _official_data_root()
     _ensure_official_onnx_files_present(data_root)
@@ -396,6 +417,7 @@ def test_official_onnx_expected_errors(
         model_path=model_path,
         expectation=expectation,
         expectation_path=Path(rel_path).as_posix(),
+        request=request,
     )
 
 
@@ -407,7 +429,10 @@ def test_official_onnx_expected_errors(
         for path in _local_onnx_file_paths()
     ],
 )
-def test_local_onnx_expected_errors(repo_relative_path: str) -> None:
+def test_local_onnx_expected_errors(
+    repo_relative_path: str,
+    request: Any,
+) -> None:
     data_root = LOCAL_ONNX_DATA_ROOT
     _ensure_local_onnx_files_present(data_root)
     repo_root = _repo_root()
@@ -424,4 +449,5 @@ def test_local_onnx_expected_errors(repo_relative_path: str) -> None:
         model_path=model_path,
         expectation=expectation,
         expectation_path=rel_path.as_posix(),
+        request=request,
     )
