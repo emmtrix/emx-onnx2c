@@ -1,6 +1,6 @@
 # Official ONNX file support
 
-Support 1302 / 1802 official ONNX files.
+Support 1300 / 1802 official ONNX files.
 
 ONNX version: 1.20.1
 
@@ -12,28 +12,28 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/light/light_densenet121.onnx | ❌ | Out of tolerance (max ULP 50389) |
 | onnx-org/onnx/backend/test/data/light/light_inception_v1.onnx | ❌ | Out of tolerance (max ULP 981668463) |
 | onnx-org/onnx/backend/test/data/light/light_inception_v2.onnx | ✅ | OK (max ULP 1) |
-| onnx-org/onnx/backend/test/data/light/light_resnet50.onnx | ❌ | Out of tolerance (max ULP 539) |
+| onnx-org/onnx/backend/test/data/light/light_resnet50.onnx | ❌ | Out of tolerance (max ULP 553) |
 | onnx-org/onnx/backend/test/data/light/light_shufflenet.onnx | ✅ | OK (max ULP 10) |
 | onnx-org/onnx/backend/test/data/light/light_squeezenet.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/light/light_vgg19.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/light/light_zfnet512.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_abs/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_acos/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_acos_example/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_acosh/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_acosh_example/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_adagrad/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_adagrad_multiple/model.onnx | ✅ | OK CHECKSUM |
+| onnx-org/onnx/backend/test/data/light/light_vgg19.onnx | ❌ | Out of tolerance (max ULP 981668463) |
+| onnx-org/onnx/backend/test/data/light/light_zfnet512.onnx | ❌ | Out of tolerance (max ULP 981668463) |
+| onnx-org/onnx/backend/test/data/node/test_abs/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_acos/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_acos_example/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_acosh/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_acosh_example/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_adagrad/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_adagrad_multiple/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/node/test_adam/model.onnx | ❌ | Unsupported op Adam |
 | onnx-org/onnx/backend/test/data/node/test_adam_multiple/model.onnx | ❌ | Unsupported op Adam |
-| onnx-org/onnx/backend/test/data/node/test_add/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_bcast/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_int16/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_int8/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_uint16/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_uint32/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_uint64/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/node/test_add_uint8/model.onnx | ✅ | OK CHECKSUM |
+| onnx-org/onnx/backend/test/data/node/test_add/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_bcast/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_int16/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_int8/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_uint16/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_uint32/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_uint64/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/node/test_add_uint8/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/node/test_affine_grid_2d/model.onnx | ❌ | Unsupported op AffineGrid |
 | onnx-org/onnx/backend/test/data/node/test_affine_grid_2d_align_corners/model.onnx | ❌ | Unsupported op AffineGrid |
 | onnx-org/onnx/backend/test/data/node/test_affine_grid_2d_align_corners_expanded/model.onnx | ❌ | Unsupported op If |
@@ -1763,8 +1763,8 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_clip/model.onnx | ❌ | Out of tolerance (max ULP 17525756) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_concat2/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_conv/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_convtranspose/model.onnx | ✅ | OK CHECKSUM |
-| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_exp/model.onnx | ✅ | OK CHECKSUM |
+| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_convtranspose/model.onnx | ✅ | OK (max ULP 0) |
+| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_exp/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_flatten/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_index/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_max/model.onnx | ✅ | OK (max ULP 0) |
@@ -1774,7 +1774,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_non_float_params/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_pad/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_params/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_permute2/model.onnx | ✅ | OK CHECKSUM |
+| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_permute2/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_pow/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_reduced_mean/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_reduced_mean_keepdim/model.onnx | ✅ | OK (max ULP 0) |
@@ -1784,7 +1784,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_repeat_dim_overflow/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_selu/model.onnx | ✅ | OK (max ULP 3) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_sqrt/model.onnx | ✅ | OK (max ULP 0) |
-| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_symbolic_override/model.onnx | ✅ | OK CHECKSUM |
+| onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_symbolic_override/model.onnx | ✅ | OK (max ULP 9) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_symbolic_override_nested/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/pytorch-operator/test_operator_view/model.onnx | ✅ | OK (max ULP 0) |
 | onnx-org/onnx/backend/test/data/simple/test_expand_shape_model1/model.onnx | ✅ | OK (max ULP 0) |
