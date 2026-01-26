@@ -101,9 +101,9 @@ def main() -> None:
         "codegen/runtime match the backend tests."
     )
     prompt_lines.append(
-        "Shape inference hint: if an op takes a runtime input that gates codegen "
-        "(e.g., Tile repeats), check whether static input/output shapes allow "
-        "deriving the needed constants to keep codegen deterministic."
+        "Codegen hint: if an op lowers successfully but codegen later fails with "
+        "missing attributes, check helper methods like _op_output_shape/_op_output_dtype "
+        "for missing RotaryEmbedding-style cases."
     )
     prompt_lines.append(
         "CLI hint: use `python -m emx_onnx_cgen ...` (or the emx-onnx-cgen entrypoint) "
