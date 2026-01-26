@@ -1,4 +1,9 @@
 {
-  "error": "'RotaryEmbeddingOp' object has no attribute 'output_rank'",
-  "command_line": "verify onnx-org/onnx/backend/test/data/node/test_rotary_embedding_with_interleaved_rotary_dim/model.onnx --test-data-dir onnx-org/onnx/backend/test/data/node/test_rotary_embedding_with_interleaved_rotary_dim/test_data_set_0"
+  "error": "Failed to build testbench.",
+  "command_line": "verify onnx-org/onnx/backend/test/data/node/test_rotary_embedding_with_interleaved_rotary_dim/model.onnx --test-data-dir onnx-org/onnx/backend/test/data/node/test_rotary_embedding_with_interleaved_rotary_dim/test_data_set_0",
+  "operators": [
+    "RotaryEmbedding"
+  ],
+  "opset_version": 23,
+  "generated_checksum": "ed5a6b9e4e4e2a3f57ab0e271e008c4058d4d0395f23955b5a790bcbba8daaee"
 }

@@ -14,9 +14,9 @@
 | Unsupported elem_type 25 (UINT2) for tensor '*'. | 17 | ██████████████ |
 | Unsupported elem_type 26 (INT2) for tensor '*'. | 17 | ██████████████ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 14 | ████████████ |
+| Failed to build testbench. | 10 | ████████ |
 | Iteration of zero-sized operands is not enabled | 9 | ████████ |
 | Unsupported op ImageDecoder | 9 | ████████ |
-| '*' object has no attribute '*' | 8 | ███████ |
 | Dropout supports only the data input and 1 or 2 outputs | 8 | ███████ |
 | tuple index out of range | 8 | ███████ |
 | Unsupported op TfIdfVectorizer | 7 | ██████ |
@@ -50,7 +50,6 @@
 | Arrays are not equal (max abs diff 148) | 2 | ██ |
 | AveragePool supports ceil_mode=0 only | 2 | ██ |
 | BatchNormalization must have 5 inputs and 1 output | 2 | ██ |
-| Failed to build testbench. | 2 | ██ |
 | Gelu only supports approximate=none | 2 | ██ |
 | LpPool expects 2D kernel_shape | 2 | ██ |
 | LpPool supports auto_pad=NOTSET only | 2 | ██ |
