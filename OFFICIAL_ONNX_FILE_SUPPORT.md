@@ -6,6 +6,8 @@ ONNX version: 1.20.1
 
 See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md) for the error histogram.
 
+<div style="overflow-x:auto; width:100%;">
+
 | File | Supported | Error |
 | --- | --- | --- |
 | onnx-org/onnx/backend/test/data/light/light_bvlc_alexnet.onnx | ❌ | Out of tolerance (max ULP 981668463) |
@@ -1810,6 +1812,8 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/simple/test_strnorm_model_monday_empty_output/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'x'. |
 | onnx-org/onnx/backend/test/data/simple/test_strnorm_model_monday_insensintive_upper_twodim/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'x'. |
 | onnx-org/onnx/backend/test/data/simple/test_strnorm_model_nostopwords_nochangecase/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'x'. |
+
+</dvi>
 
 ## Local ONNX file support
 
