@@ -2,22 +2,23 @@
 
 | Error message | Count | Histogram |
 | --- | --- | --- |
-| Unsupported value type '*' for '*'. Hint: export the model with tensor inputs/outputs. | 36 | ██████████████████████████████ |
-| Out of tolerance | 34 | ████████████████████████████ |
-| Unsupported elem_type 8 (STRING) for tensor '*'. | 32 | ███████████████████████████ |
-| Unsupported elem_type 17 (FLOAT8E4M3FN) for tensor '*'. | 22 | ██████████████████ |
-| Unsupported elem_type 19 (FLOAT8E5M2) for tensor '*'. | 20 | █████████████████ |
-| Unsupported elem_type 18 (FLOAT8E4M3FNUZ) for tensor '*'. | 18 | ███████████████ |
-| Unsupported elem_type 20 (FLOAT8E5M2FNUZ) for tensor '*'. | 18 | ███████████████ |
-| Unsupported elem_type 21 (UINT4) for tensor '*'. | 17 | ██████████████ |
-| Unsupported elem_type 22 (INT4) for tensor '*'. | 17 | ██████████████ |
-| Unsupported elem_type 25 (UINT2) for tensor '*'. | 17 | ██████████████ |
-| Unsupported elem_type 26 (INT2) for tensor '*'. | 17 | ██████████████ |
+| Out of tolerance | 34 | ██████████████████████████████ |
+| Unsupported elem_type 8 (STRING) for tensor '*'. | 32 | ████████████████████████████ |
+| Unsupported value type '*' for '*'. Hint: sequence inputs/outputs are not supported yet. | 28 | █████████████████████████ |
+| Unsupported elem_type 17 (FLOAT8E4M3FN) for tensor '*'. | 22 | ███████████████████ |
+| Unsupported elem_type 19 (FLOAT8E5M2) for tensor '*'. | 20 | ██████████████████ |
+| Unsupported elem_type 18 (FLOAT8E4M3FNUZ) for tensor '*'. | 18 | ████████████████ |
+| Unsupported elem_type 20 (FLOAT8E5M2FNUZ) for tensor '*'. | 18 | ████████████████ |
+| Unsupported elem_type 21 (UINT4) for tensor '*'. | 17 | ███████████████ |
+| Unsupported elem_type 22 (INT4) for tensor '*'. | 17 | ███████████████ |
+| Unsupported elem_type 25 (UINT2) for tensor '*'. | 17 | ███████████████ |
+| Unsupported elem_type 26 (INT2) for tensor '*'. | 17 | ███████████████ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 14 | ████████████ |
 | Iteration of zero-sized operands is not enabled | 9 | ████████ |
 | Unsupported op ImageDecoder | 9 | ████████ |
 | '*' object has no attribute '*' | 8 | ███████ |
 | Dropout supports only the data input and 1 or 2 outputs | 8 | ███████ |
+| Unsupported value type '*' for '*'. Hint: optional inputs/outputs are not supported yet. | 8 | ███████ |
 | tuple index out of range | 8 | ███████ |
 | Unsupported op TfIdfVectorizer | 7 | ██████ |
 | AveragePool has unsupported attributes | 6 | █████ |
@@ -29,24 +30,24 @@
 | Unsupported op Col2Im | 5 | ████ |
 | Unsupported op DequantizeLinear | 5 | ████ |
 | Unsupported op If | 5 | ████ |
-| Unsupported elem_type 24 (FLOAT8E8M0) for tensor '*'. | 4 | ███ |
-| Unsupported op AffineGrid | 4 | ███ |
-| Unsupported op Compress | 4 | ███ |
-| Unsupported op DeformConv | 4 | ███ |
-| Unsupported op GRU | 4 | ███ |
-| Unsupported op OptionalHasElement | 4 | ███ |
-| Unsupported op RNN | 4 | ███ |
-| AveragePool supports auto_pad=NOTSET only | 3 | ██ |
-| Elu only supports alpha=1.0 | 3 | ██ |
-| HardSigmoid only supports alpha=0.2 | 3 | ██ |
-| LeakyRelu only supports alpha=0.01 | 3 | ██ |
-| Unsupported op Bernoulli | 3 | ██ |
-| Unsupported op DynamicQuantizeLinear | 3 | ██ |
-| Unsupported op Loop | 3 | ██ |
-| Unsupported op Momentum | 3 | ██ |
-| Unsupported op RandomUniformLike | 3 | ██ |
-| Unsupported op RoiAlign | 3 | ██ |
-| name '*' is not defined | 3 | ██ |
+| Unsupported elem_type 24 (FLOAT8E8M0) for tensor '*'. | 4 | ████ |
+| Unsupported op AffineGrid | 4 | ████ |
+| Unsupported op Compress | 4 | ████ |
+| Unsupported op DeformConv | 4 | ████ |
+| Unsupported op GRU | 4 | ████ |
+| Unsupported op OptionalHasElement | 4 | ████ |
+| Unsupported op RNN | 4 | ████ |
+| AveragePool supports auto_pad=NOTSET only | 3 | ███ |
+| Elu only supports alpha=1.0 | 3 | ███ |
+| HardSigmoid only supports alpha=0.2 | 3 | ███ |
+| LeakyRelu only supports alpha=0.01 | 3 | ███ |
+| Unsupported op Bernoulli | 3 | ███ |
+| Unsupported op DynamicQuantizeLinear | 3 | ███ |
+| Unsupported op Loop | 3 | ███ |
+| Unsupported op Momentum | 3 | ███ |
+| Unsupported op RandomUniformLike | 3 | ███ |
+| Unsupported op RoiAlign | 3 | ███ |
+| name '*' is not defined | 3 | ███ |
 | Arrays are not equal (max abs diff 148) | 2 | ██ |
 | AveragePool supports ceil_mode=0 only | 2 | ██ |
 | BatchNormalization must have 5 inputs and 1 output | 2 | ██ |
