@@ -42,34 +42,75 @@
  *   kernel_shape: [2, 2]
  *   strides: [2, 2]
  */
+static inline float node0_averagepool_pairwise_sum(const float *values, idx_t n) {
+    if (n < 8) {
+        float res = -0.0f;
+        for (idx_t i = 0; i < n; ++i) {
+            res += values[i];
+        }
+        return res;
+    }
+    if (n <= 128) {
+        float r[8];
+        r[0] = values[0];
+        r[1] = values[1];
+        r[2] = values[2];
+        r[3] = values[3];
+        r[4] = values[4];
+        r[5] = values[5];
+        r[6] = values[6];
+        r[7] = values[7];
+        idx_t i = 8;
+        for (; i < n - (n % 8); i += 8) {
+            r[0] += values[i + 0];
+            r[1] += values[i + 1];
+            r[2] += values[i + 2];
+            r[3] += values[i + 3];
+            r[4] += values[i + 4];
+            r[5] += values[i + 5];
+            r[6] += values[i + 6];
+            r[7] += values[i + 7];
+        }
+        float res = ((r[0] + r[1]) + (r[2] + r[3])) + ((r[4] + r[5]) + (r[6] + r[7]));
+        for (; i < n; ++i) {
+            res += values[i];
+        }
+        return res;
+    }
+    idx_t n2 = n / 2;
+    n2 -= n2 % 8;
+    return node0_averagepool_pairwise_sum(values, n2) + node0_averagepool_pairwise_sum(values + n2, n - n2);
+}
+
 static inline void node0_averagepool(const float input0[1][1][4][4], float output[1][1][2][2]) {
     for (idx_t n = 0; n < 1; ++n) {
         for (idx_t c = 0; c < 1; ++c) {
             for (idx_t oh = 0; oh < 2; ++oh) {
                 for (idx_t ow = 0; ow < 2; ++ow) {
-                    float acc = 0.0f;
+                    float window_vals[4];
+                    idx_t value_count = 0;
                     idx_t count = 0;
                     for (idx_t kh = 0; kh < 2; ++kh) {
-                        const idx_t ih = oh * 2 + kh - 0;
+                        const idx_t ih = oh * 2 + kh * 1 - 0;
                         if (ih < 0 || ih >= 4) {
-                            if (0) {
+                            if (0 && ih < 4 + 0) {
                                 count += 2;
                             }
                         } else {
                             for (idx_t kw = 0; kw < 2; ++kw) {
-                                const idx_t iw = ow * 2 + kw - 0;
+                                const idx_t iw = ow * 2 + kw * 1 - 0;
                                 if (iw < 0 || iw >= 4) {
-                                    if (0) {
+                                    if (0 && iw < 4 + 0) {
                                         count += 1;
                                     }
                                 } else {
-                                    acc += input0[n][c][ih][iw];
+                                    window_vals[value_count++] = input0[n][c][ih][iw];
                                     count += 1;
                                 }
                             }
                         }
                     }
-                    output[n][c][oh][ow] = count ? acc / (float)count : 0.0f;
+                    output[n][c][oh][ow] = count ? (float)(node0_averagepool_pairwise_sum(window_vals, value_count) / (float)count) : 0.0f;
                 }
             }
         }

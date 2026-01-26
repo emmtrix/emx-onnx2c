@@ -4,5 +4,6 @@
   "operators": [
     "AveragePool"
   ],
-  "opset_version": 22
+  "opset_version": 22,
+  "generated_checksum": "2dc33d64554d5934e74eeae586f7632df7ab9f7c29f6e2135af9a1d2bccf854e"
 }

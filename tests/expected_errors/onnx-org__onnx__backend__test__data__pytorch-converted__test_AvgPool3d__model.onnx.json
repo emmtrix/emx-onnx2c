@@ -1,9 +1,9 @@
 {
-  "error": "OK (max ULP 0)",
+  "error": "OK (max ULP 16)",
   "command_line": "verify onnx-org/onnx/backend/test/data/pytorch-converted/test_AvgPool3d/model.onnx --test-data-dir onnx-org/onnx/backend/test/data/pytorch-converted/test_AvgPool3d/test_data_set_0",
   "operators": [
     "AveragePool"
   ],
   "opset_version": 6,
-  "generated_checksum": "1bf69b4b822bfd4ad028423a8e9cc83cbdb48ed46d91c37fe6d6098bdaf65dc5"
+  "generated_checksum": "bdc5179dbf6871273a0cc31b0bfb209f814ba858d2c28071fc3d5fe9327a0d67"
 }

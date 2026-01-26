@@ -1,8 +1,9 @@
 {
-  "error": "AveragePool has unsupported attributes",
+  "error": "OK (max ULP 0)",
   "command_line": "verify onnx-org/onnx/backend/test/data/node/test_averagepool_2d_dilations/model.onnx --test-data-dir onnx-org/onnx/backend/test/data/node/test_averagepool_2d_dilations/test_data_set_0",
   "operators": [
     "AveragePool"
   ],
-  "opset_version": 22
+  "opset_version": 22,
+  "generated_checksum": "c3f41653329e06925e5042f7d54c5458354ff1682d0b311d8c74b18ba396742b"
 }

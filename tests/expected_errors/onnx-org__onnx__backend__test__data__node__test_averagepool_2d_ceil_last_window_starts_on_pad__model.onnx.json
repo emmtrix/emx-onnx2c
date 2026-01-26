@@ -1,8 +1,9 @@
 {
-  "error": "AveragePool supports ceil_mode=0 only",
+  "error": "Out of tolerance (max ULP 2983)",
   "command_line": "verify onnx-org/onnx/backend/test/data/node/test_averagepool_2d_ceil_last_window_starts_on_pad/model.onnx --test-data-dir onnx-org/onnx/backend/test/data/node/test_averagepool_2d_ceil_last_window_starts_on_pad/test_data_set_0",
   "operators": [
     "AveragePool"
   ],
-  "opset_version": 22
+  "opset_version": 22,
+  "generated_checksum": "fea9229ddf13ef7aebe56d028a08269a5bb4099526c8d7a3d4d98a6538217f48"
 }

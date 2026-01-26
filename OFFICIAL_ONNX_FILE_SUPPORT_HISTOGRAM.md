@@ -3,7 +3,7 @@
 | Error message | Count | Histogram |
 | --- | --- | --- |
 | Unsupported value type '*' for '*'. Hint: export the model with tensor inputs/outputs. | 36 | ██████████████████████████████ |
-| Out of tolerance | 34 | ████████████████████████████ |
+| Out of tolerance | 32 | ███████████████████████████ |
 | Unsupported elem_type 8 (STRING) for tensor '*'. | 32 | ███████████████████████████ |
 | Unsupported elem_type 17 (FLOAT8E4M3FN) for tensor '*'. | 22 | ██████████████████ |
 | Unsupported elem_type 19 (FLOAT8E5M2) for tensor '*'. | 20 | █████████████████ |
@@ -20,7 +20,6 @@
 | Dropout supports only the data input and 1 or 2 outputs | 8 | ███████ |
 | tuple index out of range | 8 | ███████ |
 | Unsupported op TfIdfVectorizer | 7 | ██████ |
-| AveragePool has unsupported attributes | 6 | █████ |
 | Unsupported elem_type 16 (BFLOAT16) for tensor '*'. | 6 | █████ |
 | Unsupported op CenterCropPad | 6 | █████ |
 | Unsupported op DFT | 6 | █████ |
@@ -47,7 +46,6 @@
 | Unsupported op RandomUniformLike | 3 | ██ |
 | Unsupported op RoiAlign | 3 | ██ |
 | name '*' is not defined | 3 | ██ |
-| AveragePool supports ceil_mode=0 only | 2 | ██ |
 | BatchNormalization must have 5 inputs and 1 output | 2 | ██ |
 | Failed to build testbench. | 2 | ██ |
 | Gelu only supports approximate=none | 2 | ██ |
