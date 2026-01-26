@@ -1813,7 +1813,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/simple/test_strnorm_model_monday_insensintive_upper_twodim/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'x'. |
 | onnx-org/onnx/backend/test/data/simple/test_strnorm_model_nostopwords_nochangecase/model.onnx | ❌ | Unsupported elem_type 8 (STRING) for tensor 'x'. |
 
-</dvi>
+</div>
 
 ## Local ONNX file support
 
