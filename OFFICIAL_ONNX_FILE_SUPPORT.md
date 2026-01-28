@@ -162,7 +162,7 @@ See [`OFFICIAL_ONNX_FILE_SUPPORT_HISTOGRAM.md`](OFFICIAL_ONNX_FILE_SUPPORT_HISTO
 | onnx-org/onnx/backend/test/data/node/test_attention_4d_causal/model.onnx | ✅ | OK (max ULP 2) |
 | onnx-org/onnx/backend/test/data/node/test_attention_4d_causal_expanded/model.onnx | ✅ | OK (max ULP 2) |
 | onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_mask4d_padded_kv/model.onnx | ✅ | OK (max ULP 3) |
-| onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_mask4d_padded_kv_expanded/model.onnx | ❌ | Pad value input must be a scalar |
+| onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_mask4d_padded_kv_expanded/model.onnx | ❌ | Where output shape must be (2, 1), got (1,) |
 | onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_sizes/model.onnx | ✅ | OK (max ULP 3) |
 | onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_sizes_attn_mask/model.onnx | ✅ | OK (max ULP 3) |
 | onnx-org/onnx/backend/test/data/node/test_attention_4d_diff_heads_sizes_attn_mask_expanded/model.onnx | ✅ | OK (max ULP 2) |
