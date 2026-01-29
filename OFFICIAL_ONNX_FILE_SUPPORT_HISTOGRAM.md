@@ -33,7 +33,6 @@
 | Unsupported op GRU | 4 | ███ |
 | Unsupported op OptionalHasElement | 4 | ███ |
 | Unsupported op RNN | 4 | ███ |
-| AveragePool supports auto_pad=NOTSET only | 3 | ██ |
 | Elu only supports alpha=1.0 | 3 | ██ |
 | HardSigmoid only supports alpha=0.2 | 3 | ██ |
 | LeakyRelu only supports alpha=0.01 | 3 | ██ |
@@ -49,8 +48,6 @@
 | Gelu only supports approximate=none | 2 | ██ |
 | LpPool expects 2D kernel_shape | 2 | ██ |
 | LpPool supports auto_pad=NOTSET only | 2 | ██ |
-| Pow expects matching dtypes, got float, int32 | 2 | ██ |
-| Pow expects matching dtypes, got float, int64 | 2 | ██ |
 | QuantizeLinear block_size is not supported | 2 | ██ |
 | Selu only supports alpha=1.6732632423543772 | 2 | ██ |
 | ThresholdedRelu only supports alpha=1.0 | 2 | ██ |
@@ -67,14 +64,11 @@
 | Unsupported op Scan | 2 | ██ |
 | Unsupported op Scatter | 2 | ██ |
 | Unsupported op TreeEnsemble | 2 | ██ |
-| AveragePool supports 2D/3D inputs only | 1 | █ |
 | ConvTranspose output shape must be fully defined and non-negative | 1 | █ |
 | Dropout mask output is not supported | 1 | █ |
 | Dynamic dim for tensor '*' | 1 | █ |
 | Graph must contain at least one node | 1 | █ |
 | Pad value input must be a scalar | 1 | █ |
-| Pow expects matching dtypes, got float, uint32 | 1 | █ |
-| Pow expects matching dtypes, got float, uint64 | 1 | █ |
 | ReduceMax does not support dtype bool | 1 | █ |
 | ReduceMin does not support dtype bool | 1 | █ |
 | Unsupported op ArrayFeatureExtractor | 1 | █ |
