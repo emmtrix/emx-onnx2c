@@ -418,6 +418,12 @@ class CEmitter:
             raise CodegenError("Emitter state not initialized")
         return self._emit_state.op_context.require_derived(op, key)
 
+    def _maybe_derived(self, op: OpBase, key: str) -> object | None:
+        if self._emit_state is None:
+            raise CodegenError("Emitter state not initialized")
+        value = self._emit_state.op_context.get_derived(op, key, None)
+        return value
+
     @staticmethod
     def _build_param_decls(
         specs: Sequence[tuple[str | None, str, str, bool]]
@@ -1306,6 +1312,8 @@ class CEmitter:
                 out_w=op.out_w,
                 kernel_h=op.kernel_h,
                 kernel_w=op.kernel_w,
+                dilation_h=op.dilation_h,
+                dilation_w=op.dilation_w,
                 stride_h=op.stride_h,
                 stride_w=op.stride_w,
                 pad_top=op.pad_top,
@@ -4439,6 +4447,8 @@ class CEmitter:
                 out_w=op.out_w,
                 kernel_h=op.kernel_h,
                 kernel_w=op.kernel_w,
+                dilation_h=op.dilation_h,
+                dilation_w=op.dilation_w,
                 stride_h=op.stride_h,
                 stride_w=op.stride_w,
                 pad_top=op.pad_top,
@@ -5368,12 +5378,20 @@ class CEmitter:
                 output_shape,
                 loop_vars,
             )
-            right_expr = CEmitter._broadcast_index_expr(
-                params["input1"],
-                input1_shape,
-                output_shape,
-                loop_vars,
-            )
+            prelu_axis = None
+            if op.function == ScalarFunction.PRELU:
+                derived_axis = self._maybe_derived(op, "prelu_slope_axis")
+                if isinstance(derived_axis, int):
+                    prelu_axis = derived_axis
+            if prelu_axis is None:
+                right_expr = CEmitter._broadcast_index_expr(
+                    params["input1"],
+                    input1_shape,
+                    output_shape,
+                    loop_vars,
+                )
+            else:
+                right_expr = f"{params['input1']}[{loop_vars[prelu_axis]}]"
             operator_expr = None
             operator = op_spec.operator
             operator_kind = op.operator_kind
@@ -6455,6 +6473,8 @@ class CEmitter:
                 out_w=op.out_w,
                 kernel_h=op.kernel_h,
                 kernel_w=op.kernel_w,
+                dilation_h=op.dilation_h,
+                dilation_w=op.dilation_w,
                 stride_h=op.stride_h,
                 stride_w=op.stride_w,
                 pad_top=op.pad_top,
