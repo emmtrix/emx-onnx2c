@@ -1,5 +1,5 @@
 {
-  "error": "OK (max ULP 2)",
+  "error": "Squeeze must have 1 input and 1 output",
   "command_line": "verify --model-base-dir onnx-org/onnx/backend/test/data/node/test_attention_4d_gqa_causal_expanded model.onnx --test-data-dir test_data_set_0",
   "operators": [
     "Shape",
@@ -28,6 +28,5 @@
     "MatMul",
     "Softmax"
   ],
-  "opset_version": 23,
-  "generated_checksum": "161788a2da71eaf1c5c68299d38b46fa87f5a7c11e6d93ee51ca67898174ffde"
+  "opset_version": 23
 }
