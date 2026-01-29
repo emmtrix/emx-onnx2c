@@ -2937,7 +2937,25 @@ def _apply_lrn(spec, data: np.ndarray) -> np.ndarray:
     return output
 
 
+def _adjacent_pair_sum(values: list[np.ndarray], dtype: np.dtype) -> np.ndarray:
+    if not values:
+        return dtype.type(0)
+    count = len(values)
+    while count > 1:
+        next_values: list[np.ndarray] = []
+        index = 0
+        while index + 1 < count:
+            next_values.append(dtype.type(values[index] + values[index + 1]))
+            index += 2
+        if index < count:
+            next_values.append(values[index])
+        values = next_values
+        count = len(values)
+    return values[0]
+
+
 def _apply_average_pool(op, data: np.ndarray) -> np.ndarray:
+    zero = data.dtype.type(0)
     if op.spatial_rank == 3:
         output = np.zeros(
             (op.batch, op.channels, op.out_d, op.out_h, op.out_w),
@@ -2948,42 +2966,45 @@ def _apply_average_pool(op, data: np.ndarray) -> np.ndarray:
                 for od in range(op.out_d):
                     for oh in range(op.out_h):
                         for ow in range(op.out_w):
-                            acc = 0.0
-                            count = 0
+                            values: list[np.ndarray] = []
                             for kd in range(op.kernel_d):
                                 id_ = (
                                     od * op.stride_d
                                     + kd * op.dilation_d
                                     - op.pad_front
                                 )
-                                if id_ < 0 or id_ >= op.in_d:
-                                    if op.count_include_pad:
-                                        count += op.kernel_h * op.kernel_w
-                                else:
-                                    for kh in range(op.kernel_h):
-                                        ih = (
-                                            oh * op.stride_h
-                                            + kh * op.dilation_h
-                                            - op.pad_top
+                                for kh in range(op.kernel_h):
+                                    ih = (
+                                        oh * op.stride_h
+                                        + kh * op.dilation_h
+                                        - op.pad_top
+                                    )
+                                    for kw in range(op.kernel_w):
+                                        iw = (
+                                            ow * op.stride_w
+                                            + kw * op.dilation_w
+                                            - op.pad_left
                                         )
-                                        if ih < 0 or ih >= op.in_h:
-                                            if op.count_include_pad:
-                                                count += op.kernel_w
-                                        else:
-                                            for kw in range(op.kernel_w):
-                                                iw = (
-                                                    ow * op.stride_w
-                                                    + kw * op.dilation_w
-                                                    - op.pad_left
-                                                )
-                                                if iw < 0 or iw >= op.in_w:
-                                                    if op.count_include_pad:
-                                                        count += 1
-                                                else:
-                                                    acc += data[n, c, id_, ih, iw]
-                                                    count += 1
+                                        if (
+                                            0 <= id_ < op.in_d
+                                            and 0 <= ih < op.in_h
+                                            and 0 <= iw < op.in_w
+                                        ):
+                                            values.append(data[n, c, id_, ih, iw])
+                                        elif op.count_include_pad:
+                                            values.append(zero)
+                            denom = (
+                                op.kernel_d * op.kernel_h * op.kernel_w
+                                if op.count_include_pad
+                                else len(values)
+                            )
+                            acc = (
+                                _adjacent_pair_sum(values, data.dtype)
+                                if values
+                                else zero
+                            )
                             output[n, c, od, oh, ow] = (
-                                0.0 if count == 0 else acc / float(count)
+                                zero if denom == 0 else acc / float(denom)
                             )
         return output
     if op.spatial_rank == 1:
@@ -2991,22 +3012,23 @@ def _apply_average_pool(op, data: np.ndarray) -> np.ndarray:
         for n in range(op.batch):
             for c in range(op.channels):
                 for ow in range(op.out_w):
-                    acc = 0.0
-                    count = 0
+                    values: list[np.ndarray] = []
                     for kw in range(op.kernel_w):
                         iw = (
                             ow * op.stride_w
                             + kw * op.dilation_w
                             - op.pad_left
                         )
-                        if iw < 0 or iw >= op.in_w:
-                            if op.count_include_pad:
-                                count += 1
-                        else:
-                            acc += data[n, c, iw]
-                            count += 1
+                        if 0 <= iw < op.in_w:
+                            values.append(data[n, c, iw])
+                        elif op.count_include_pad:
+                            values.append(zero)
+                    denom = op.kernel_w if op.count_include_pad else len(values)
+                    acc = (
+                        _adjacent_pair_sum(values, data.dtype) if values else zero
+                    )
                     output[n, c, ow] = (
-                        0.0 if count == 0 else acc / float(count)
+                        zero if denom == 0 else acc / float(denom)
                     )
         return output
     output = np.zeros(
@@ -3016,32 +3038,33 @@ def _apply_average_pool(op, data: np.ndarray) -> np.ndarray:
         for c in range(op.channels):
             for oh in range(op.out_h):
                 for ow in range(op.out_w):
-                    acc = 0.0
-                    count = 0
+                    values: list[np.ndarray] = []
                     for kh in range(op.kernel_h):
                         ih = (
                             oh * op.stride_h
                             + kh * op.dilation_h
                             - op.pad_top
                         )
-                        if ih < 0 or ih >= op.in_h:
-                            if op.count_include_pad:
-                                count += op.kernel_w
-                        else:
-                            for kw in range(op.kernel_w):
-                                iw = (
-                                    ow * op.stride_w
-                                    + kw * op.dilation_w
-                                    - op.pad_left
-                                )
-                                if iw < 0 or iw >= op.in_w:
-                                    if op.count_include_pad:
-                                        count += 1
-                                else:
-                                    acc += data[n, c, ih, iw]
-                                    count += 1
+                        for kw in range(op.kernel_w):
+                            iw = (
+                                ow * op.stride_w
+                                + kw * op.dilation_w
+                                - op.pad_left
+                            )
+                            if 0 <= ih < op.in_h and 0 <= iw < op.in_w:
+                                values.append(data[n, c, ih, iw])
+                            elif op.count_include_pad:
+                                values.append(zero)
+                    denom = (
+                        op.kernel_h * op.kernel_w
+                        if op.count_include_pad
+                        else len(values)
+                    )
+                    acc = (
+                        _adjacent_pair_sum(values, data.dtype) if values else zero
+                    )
                     output[n, c, oh, ow] = (
-                        0.0 if count == 0 else acc / float(count)
+                        zero if denom == 0 else acc / float(denom)
                     )
     return output
 
