@@ -20,8 +20,6 @@ import numpy as np
 import onnx
 from onnx import numpy_helper
 
-from shared.ulp import ulp_intdiff_float
-
 from ._build_info import BUILD_DATE, GIT_VERSION
 from .compiler import Compiler, CompilerOptions
 from .errors import CodegenError, ShapeInferenceError, UnsupportedOpError
@@ -29,7 +27,7 @@ from .onnx_import import import_onnx
 from .determinism import deterministic_reference_runtime
 from .onnxruntime_utils import make_deterministic_session_options
 from .testbench import decode_testbench_array
-from .verification import format_success_message
+from .verification import format_success_message, worst_ulp_diff
 
 LOGGER = logging.getLogger(__name__)
 
@@ -167,37 +165,6 @@ def _report_generated_artifacts(
 ) -> None:
     for name, size_bytes in artifacts:
         reporter.info(f"  {name} ({_format_artifact_size(size_bytes)})")
-
-
-def _worst_ulp_diff(
-    actual: "np.ndarray", expected: "np.ndarray"
-) -> tuple[int, tuple[tuple[int, ...], float, float] | None]:
-    if actual.shape != expected.shape:
-        raise ValueError(
-            f"Shape mismatch for ULP calculation: {actual.shape} vs {expected.shape}"
-        )
-    if not np.issubdtype(expected.dtype, np.floating):
-        return 0, None
-    if actual.size == 0:
-        return 0, None
-    dtype = expected.dtype
-    actual_cast = actual.astype(dtype, copy=False)
-    expected_cast = expected.astype(dtype, copy=False)
-    max_diff = 0
-    worst: tuple[tuple[int, ...], float, float] | None = None
-    iterator = np.nditer(
-        [actual_cast, expected_cast], flags=["refs_ok", "multi_index"]
-    )
-    for actual_value, expected_value in iterator:
-        diff = ulp_intdiff_float(actual_value[()], expected_value[()])
-        if diff > max_diff:
-            max_diff = diff
-            worst = (
-                iterator.multi_index,
-                float(actual_value[()]),
-                float(expected_value[()]),
-            )
-    return max_diff, worst
 
 
 def _worst_abs_diff(
@@ -508,6 +475,15 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=100,
         help="Maximum allowed ULP difference for floating outputs (default: 100)",
+    )
+    verify_parser.add_argument(
+        "--atol-eps",
+        type=float,
+        default=1.0,
+        help=(
+            "Absolute tolerance as a multiple of machine epsilon for ULP checks "
+            "(default: 1.0)"
+        ),
     )
     verify_parser.add_argument(
         "--runtime",
@@ -1102,8 +1078,10 @@ def _verify_model(
                 runtime_out = runtime_out.astype(info.np_dtype, copy=False)
                 output_data = output_data.reshape(runtime_out.shape)
                 if np.issubdtype(info.np_dtype, np.floating):
-                    output_max, output_worst = _worst_ulp_diff(
-                        output_data, runtime_out
+                    output_max, output_worst = worst_ulp_diff(
+                        output_data,
+                        runtime_out,
+                        atol_eps=args.atol_eps,
                     )
                     if output_max > max_ulp:
                         max_ulp = output_max
