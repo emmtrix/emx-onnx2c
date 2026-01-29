@@ -7,7 +7,12 @@ from shared.scalar_types import ScalarType
 
 from ...ops import COMPARE_FUNCTIONS, OperatorKind, binary_op_symbol
 from ...errors import ShapeInferenceError, UnsupportedOpError
-from ..op_base import ElementwiseOpBase, RenderableOpBase, VariadicLikeOpBase
+from ..op_base import (
+    BroadcastingOpBase,
+    ElementwiseOpBase,
+    RenderableOpBase,
+    VariadicLikeOpBase,
+)
 from ..op_context import OpContext
 
 
