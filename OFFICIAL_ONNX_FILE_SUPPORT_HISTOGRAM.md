@@ -14,7 +14,6 @@
 | Unsupported elem_type 25 (UINT2) for tensor '*'. | 17 | ██████████████ |
 | Unsupported elem_type 26 (INT2) for tensor '*'. | 17 | ██████████████ |
 | Unsupported elem_type 23 (FLOAT4E2M1) for tensor '*'. | 14 | ████████████ |
-| name '*' is not defined | 11 | █████████ |
 | Unsupported op ImageDecoder | 9 | ████████ |
 | Dropout supports only the data input and 1 or 2 outputs | 8 | ███████ |
 | tuple index out of range | 8 | ███████ |
@@ -44,6 +43,7 @@
 | Unsupported op Momentum | 3 | ██ |
 | Unsupported op RandomUniformLike | 3 | ██ |
 | Unsupported op RoiAlign | 3 | ██ |
+| name '*' is not defined | 3 | ██ |
 | BatchNormalization must have 5 inputs and 1 output | 2 | ██ |
 | Failed to build testbench. | 2 | ██ |
 | Gelu only supports approximate=none | 2 | ██ |
