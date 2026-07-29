@@ -17,7 +17,7 @@ It now targets **full standard ONNX opset 26 support** based on **ONNX v1.21.0**
 Key characteristics:
 
 - **Static, compile-time known memory layout** for parameters, activations, and temporaries — no allocator is needed to size buffers
-- **Optional allocation-free code generation**: by default, temporaries above `--large-temp-threshold` (1024 bytes) are placed on the heap via `malloc`/`free` so that large models do not overflow the stack. Set `--large-temp-threshold 0` to keep every temporary on the stack and emit code entirely without `malloc`/`free`
+- **Optional allocation-free code generation** via `--large-temp-threshold 0` (by default, temporaries above 1024 bytes use `malloc`/`free` to protect the stack)
 - **Deterministic control flow** (explicit loops, no hidden dispatch or callbacks)
 - **No OS dependencies**, using only standard C headers (for example, `stdint.h` and `stddef.h`)
 - **Single-threaded execution model**
