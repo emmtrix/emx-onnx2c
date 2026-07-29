@@ -33,7 +33,8 @@ PyYAML==6.0.2
 onnxoptimizer>=0.3.13
 
 # Dev tooling (recommended)
-ruff>=0.6.0
+# Pinned: Ruff changes lint defaults and formatter style between releases
+ruff==0.16.0
 black>=24.0.0
 vulture>=2.11
 setuptools_scm[toml]>=7.0
