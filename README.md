@@ -47,7 +47,7 @@ For PyTorch models, see the related project [`emx-pytorch-cgen`](https://github.
 
 ## Non-goals
 
-- Aggressive performance optimizations in generated C. Target-specific optimization (kernel fusion, SIMD/vector intrinsics, memory-footprint reduction) is the job of the [emmtrix Edge AI Compiler](https://www.emmtrix.com/tools/emmtrix-edge-ai-compiler), which consumes the C code produced here.
+- Aggressive performance optimizations in generated C (that is the job of the [emmtrix Edge AI Compiler](https://www.emmtrix.com/tools/emmtrix-edge-ai-compiler)).
 - Implicit runtime dependencies or dynamic loading.
 - Training/backpropagation support.
 
