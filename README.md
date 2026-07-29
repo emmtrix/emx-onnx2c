@@ -10,14 +10,14 @@
 
 </div>
 
-**emmtrix ONNX-to-C Code Generator (emx-onnx-cgen)** compiles ONNX models to portable, deterministic C code for deeply embedded systems. The generated code is designed to run without dynamic memory allocation, operating-system services, or external runtimes, making it suitable for safety-critical and resource-constrained targets.
+**emmtrix ONNX-to-C Code Generator (emx-onnx-cgen)** compiles ONNX models to portable, deterministic C code for deeply embedded systems. The generated code runs without operating-system services or external runtimes and can be generated fully allocation-free, making it suitable for safety-critical and resource-constrained targets.
 
 It now targets **full standard ONNX opset 26 support** based on **ONNX v1.21.0** and supports **nearly all microsoft ONNX operators** based on **ONNX Runtime 1.27.0**.
 
 Key characteristics:
 
-- **No dynamic memory allocation** (`malloc`, `free`, heap usage)
-- **Static, compile-time known memory layout** for parameters, activations, and temporaries
+- **Static, compile-time known memory layout** for parameters, activations, and temporaries — no allocator is needed to size buffers
+- **Optional allocation-free code generation**: by default, temporaries above `--large-temp-threshold` (1024 bytes) are placed on the heap via `malloc`/`free` so that large models do not overflow the stack. Set `--large-temp-threshold 0` to keep every temporary on the stack and emit code entirely without `malloc`/`free`
 - **Deterministic control flow** (explicit loops, no hidden dispatch or callbacks)
 - **No OS dependencies**, using only standard C headers (for example, `stdint.h` and `stddef.h`)
 - **Single-threaded execution model**
@@ -43,10 +43,11 @@ For PyTorch models, see the related project [`emx-pytorch-cgen`](https://github.
 - Deterministic and reproducible C code generation.
 - Clean, pass-based compiler architecture (import → normalize → optimize → lower → emit).
 - Minimal C runtime with explicit, predictable data movement.
+- Serve as the correctness-first ONNX front end for the [emmtrix Edge AI Compiler](https://www.emmtrix.com/tools/emmtrix-edge-ai-compiler), which takes this C code and optimizes it for a concrete target (see [Usage Scenario 3](#3-target-optimized-code-generation-with-the-emmtrix-edge-ai-compiler)).
 
 ## Non-goals
 
-- Aggressive performance optimizations in generated C.
+- Aggressive performance optimizations in generated C. Target-specific optimization (kernel fusion, SIMD/vector intrinsics, memory-footprint reduction) is the job of the [emmtrix Edge AI Compiler](https://www.emmtrix.com/tools/emmtrix-edge-ai-compiler), which consumes the C code produced here.
 - Implicit runtime dependencies or dynamic loading.
 - Training/backpropagation support.
 
@@ -82,7 +83,7 @@ Typical characteristics:
 
 * No file system or OS required.
 * All weights stored as `static const` arrays in flash/ROM.
-* Deterministic memory usage with no runtime allocation.
+* Deterministic memory usage with no runtime allocation (combine with `--large-temp-threshold 0` so that temporaries stay on the stack and no `malloc`/`free` is emitted).
 * Suitable for:
   * Microcontrollers
   * Safety-critical firmware
@@ -106,18 +107,26 @@ Typical characteristics:
 
 This scenario is enabled automatically once the cumulative weight size exceeds `--large-weight-threshold` (default: 102400 bytes).
 
-### 3. Target-Optimized Code Generation via emmtrix Source-to-Source Tooling
+### 3. Target-Optimized Code Generation with the emmtrix Edge AI Compiler
 
-In both of the above scenarios, the generated C code can serve as **input to emmtrix source-to-source compilation and optimization tools**, enabling target-specific optimizations while preserving functional correctness.
+In both of the above scenarios, the generated C code can serve as **input to the
+[emmtrix Edge AI Compiler](https://www.emmtrix.com/tools/emmtrix-edge-ai-compiler)**, our
+source-to-source compiler that specializes portable C for a concrete embedded target while
+preserving functional correctness.
 
 Examples of applied transformations include:
 
-* Kernel fusion and loop restructuring
+* Kernel fusion and loop restructuring (loop normalization, fusion, simplified control flow)
+* Constant propagation, dead code elimination, and pointer resolution
 * Memory layout optimization and buffer reuse
 * Reduction of internal temporary memory
-* Utilization of SIMD / vector instruction sets
+* Utilization of SIMD / vector instruction sets and dedicated accelerators
 * Offloading of large weights to external memory
 * Dynamic loading of weights or activations via DMA
+
+Targets supported by the emmtrix Edge AI Compiler include Infineon AURIX TC4x TriCore, Arm
+Cortex-A (NEON/SVE), x86 (AVX), and RISC-V (RVV), with code emitted for toolchains such as
+TASKING SmartCode, Synopsys ARC MetaWare, GCC, and Clang.
 
 This workflow allows a clear separation between:
 
@@ -374,6 +383,9 @@ Declare them with [`--sequence-element-shape`](#common-options), e.g.
 
 ## Related Projects
 
+- **emmtrix Edge AI Compiler**  
+  Source-to-source compiler that turns the portable C generated here into target-optimized C for embedded processors (kernel fusion, SIMD/vector intrinsics, memory-footprint reduction).  
+  https://www.emmtrix.com/tools/emmtrix-edge-ai-compiler
 - **emx-pytorch-cgen**  
   A PyTorch-to-C compiler following the same design principles as emx-onnx-cgen, but operating directly on PyTorch models instead of ONNX graphs.  
   https://github.com/emmtrix/emx-pytorch-cgen
