@@ -64,6 +64,11 @@ extend-exclude = [
     "onnx-org",
 ]
 
+[tool.ruff.lint]
+# Pin the rule set explicitly so a new Ruff release cannot change what CI enforces
+# (Ruff 0.16 widened its implicit defaults). These are Ruff's historical defaults.
+select = ["E4", "E7", "E9", "F"]
+
 [tool.vulture]
 exclude = [
     "emx-ort-test-artifacts-org/",
